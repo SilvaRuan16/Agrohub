@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
    
 public class LoginModel implements Serializable {
    private Long id;
-   private String userAccess;
+   private String username;
    private String password;
 }

@@ -1,9 +1,6 @@
 package br.com.agrohub.demo.controller;
 
-import java.math.BigInteger;
-import java.util.List;
-
-import br.com.agrohub.demo.models.LoginModel;
+import br.com.agrohub.demo.dto.LoginDTO;
 import br.com.agrohub.demo.service.LoginService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,29 +20,29 @@ public class LoginController {
     LoginService LoginService;
 
     @GetMapping("/login")
-    public List<LoginModel> getTodos(@RequestParam String userAccess) throws Exception {
-        LoginModel loginModel = new LoginModel();
-        loginModel.setUserAccess(userAccess);
-        return LoginService.getTodos(loginModel);
+    public LoginDTO getTodos(@RequestParam String username) throws Exception {
+        LoginDTO dto = new LoginDTO();
+        dto.setUsername(username);
+        return LoginService.getTodos(dto);
     }
 
     @GetMapping("/login/{id}")
-    public LoginModel buscarPorId(@PathVariable BigInteger id) throws Exception {
+    public LoginDTO buscarPorId(@PathVariable Long id) throws Exception {
         return LoginService.buscarPorId(id);
     }
 
     @PostMapping("/login")
-    public LoginModel cadastrar(@RequestBody LoginModel userAccess) throws Exception {
-        return LoginService.cadastrar(userAccess);
+    public LoginDTO cadastrar(@RequestBody LoginDTO entityDTO) throws Exception {
+        return LoginService.cadastrar(entityDTO);
     }
 
     @PutMapping("/login/{id}")
-    public LoginModel atualizar(@PathVariable BigInteger id, @RequestBody LoginModel userAccess) throws Exception {
-        return LoginService.atualizar(id, userAccess);
+    public LoginDTO atualizar(@PathVariable Long id, @RequestBody LoginDTO newData) throws Exception {
+        return LoginService.atualizar(id, newData);
     }
 
     @DeleteMapping("/login/{id}")
-    public void deletar(@PathVariable BigInteger id) throws Exception {
+    public void deletar(@PathVariable Long id) throws Exception {
         LoginService.deletar(id);
     }
 
