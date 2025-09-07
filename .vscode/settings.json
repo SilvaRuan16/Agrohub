@@ -1,4 +1,12 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "workbench.tree.compactFolders": false,
+    "editor.minimap.enabled": false,
+    "editor.renderLineHighlight": "none",
+    "editor.wordWrap": "on",
+    "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+    "editor.lineLimit": 80,
+    "editor.fontSize": 16,
+    "editor.lineHeight": 24,
+    "java.compile.nullAnalysis.mode": "automatic"
 }
