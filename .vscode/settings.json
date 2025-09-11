@@ -8,5 +8,6 @@
     "editor.lineLimit": 80,
     "editor.fontSize": 16,
     "editor.lineHeight": 24,
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

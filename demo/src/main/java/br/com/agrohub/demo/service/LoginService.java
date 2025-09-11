@@ -3,6 +3,7 @@ package br.com.agrohub.demo.service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.agrohub.demo.dto.LoginDTO;
@@ -16,9 +17,19 @@ public class LoginService extends GenericService<LoginModel, LoginDTO> {
     @Autowired
     private ModelMapper mapper;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     protected LoginDTO toDTO(LoginModel entity) {
-        return mapper.map(entity, LoginDTO.class);
+        LoginDTO dto = mapper.map(entity, LoginDTO.class);
+        if (dto != null) {
+            dto.setPassword(null);
+        }
+        return dto;
     }
 
     @Override
@@ -26,12 +37,12 @@ public class LoginService extends GenericService<LoginModel, LoginDTO> {
         return mapper.map(dto, LoginModel.class);
     }
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
     public boolean autenticar(String username, String senha) {
         LoginModel usuario = usuarioRepository.findByUsername(username);
-        return usuario != null && usuario.getPassword().equals(senha);
+        if (usuario == null || usuario.getPassword() == null) {
+            return false;
+        }
+        return passwordEncoder.matches(senha, usuario.getPassword());
     }
 
     public LoginDTO getTodos(LoginDTO entityDTO) throws Exception {
@@ -60,6 +71,13 @@ public class LoginService extends GenericService<LoginModel, LoginDTO> {
     public LoginDTO cadastrar(LoginDTO entityDTO) throws Exception {
         validarLogin(entityDTO);
         entityDTO.setId(null);
+
+        if (entityDTO.getPassword() == null || entityDTO.getPassword().isBlank()) {
+            throw new Exception("Senha não informada.");
+        }
+
+        entityDTO.setPassword(passwordEncoder.encode(entityDTO.getPassword()));
+
         try {
             return toDTO(usuarioRepository.save(toEntity(entityDTO)));
         } catch (DataIntegrityViolationException e) {
@@ -70,19 +88,42 @@ public class LoginService extends GenericService<LoginModel, LoginDTO> {
     }
 
     public LoginDTO atualizar(Long id, LoginDTO newData) throws Exception {
-        validarLogin(newData);
-        if (usuarioRepository.findByUsername(newData.getUsername()) != null) {
+        LoginModel existing = usuarioRepository.findById(id)
+                .orElseThrow(() -> new Exception("ID inválido."));
+
+        if (!existing.getUsername().equals(newData.getUsername()) &&
+                usuarioRepository.existsByUsername(newData.getUsername())) {
             throw new UsuarioDuplicadoException(newData.getUsername());
         }
+
+        if (newData.getPassword() == null || newData.getPassword().isBlank()) {
+            newData.setPassword(existing.getPassword()); // mantém hash atual
+        } else {
+
+            newData.setPassword(encodeIfNeeded(newData.getPassword()));
+        }
+
+        newData.setId(id);
+
         try {
             return toDTO(usuarioRepository.save(toEntity(newData)));
         } catch (Exception e) {
-            throw new Exception("A alteração não foi realizada");
+            throw new Exception("A alteração não foi realizada: " + e.getMessage(), e);
         }
     }
 
     public String deletar(Long id) throws Exception {
         usuarioRepository.deleteById(id);
         return "Excluído";
+    }
+
+    private String encodeIfNeeded(String passwordOrHash) {
+        if (passwordOrHash == null)
+            return null;
+        String trimmed = passwordOrHash.trim();
+        if (trimmed.startsWith("$2a$") || trimmed.startsWith("$2b$") || trimmed.startsWith("$2y$")) {
+            return trimmed;
+        }
+        return passwordEncoder.encode(trimmed);
     }
 }
