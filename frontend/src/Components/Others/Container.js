@@ -1,4 +1,4 @@
-import "./Style/Container.css";
+import '../Style/Container.css'
 
 export default function Container({children}) {
     return <>

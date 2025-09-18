@@ -1,0 +1,64 @@
+.bg_menu {
+    width: 100%;
+    height: 80px;
+    background-color: rgb(9, 51, 28);
+    display: grid;
+    grid-template-columns: 30% 70%;
+}
+
+.picture_div {
+    background-color: white;
+    width: 60px;
+    height: 60px;
+    margin: 10px;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 30%;
+}
+
+.logo {
+    height: 60px;
+    width: 60px;
+}
+
+.startMenuBar {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 100px auto;
+    text-align: start;
+    align-items: center;
+}
+
+.saudacao {
+    color: white;
+    font-family: "Open Sans", sans-serif;
+}
+
+.endMenuBar {
+    display: grid;
+    grid-template-columns: 60% auto auto 100px;
+    justify-items: center;
+    align-items: center;
+}
+
+.picture_div2 {
+    background-color: white;
+    width: 60px;
+    height: 60px;
+    margin: 10px;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 30%;
+}
+
+.buttonMenuBar {
+    width: 100px;
+    height: 40px;
+    border-radius: 10px;
+    font-family: "Open Sans", sans-serif;
+    cursor: pointer;
+}

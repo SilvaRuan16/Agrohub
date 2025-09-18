@@ -1,5 +1,5 @@
-import Logo from './Image/Logo_AgroHub.png';
-import './Style/Div1.css';
+import Logo from '../Image/Logo_AgroHub.png';
+import '../Style/Div1.css';
 
 export default function Div1() {
     return <>

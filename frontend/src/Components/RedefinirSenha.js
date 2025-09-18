@@ -1,9 +1,9 @@
-import Div1 from "./Div1";
-import Div2 from "./Div2";
+import Div1 from "./Others/Div1";
+import Div2 from "./Others/Div2";
 import './Style/Div2.css';
-import Container from "./Container";
+import Container from "./Others/Container";
 import './Style/Frames.css';
-import Screen from './Screen';
+import Screen from './Others/Screen';
 
 export default function RedefinirSenha() {
     const screenWidth = Screen();

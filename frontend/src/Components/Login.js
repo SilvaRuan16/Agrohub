@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import Div1 from "./Div1";
+import Div1 from "./Others/Div1";
 import "./Style/Frames.css";
-import Container from "./Container";
-import Div2 from "./Div2";
+import Container from "./Others/Container";
+import Div2 from "./Others/Div2";
 import './Style/Div2.css';
-import Screen from './Screen';
+import Screen from './Others/Screen';
 
 export default function Login() {
     const screenWidth = Screen();

@@ -1,4 +1,4 @@
-import './Style/Div2.css';
+import '../Style/Div2.css';
 
 export default function Div2({children}) {
     return <>
