@@ -1,10 +1,14 @@
 import MenuBar from "./Others/MenuBar";
+import Menuzinho from "./Others/Menuzinho";
 
 export default function InicioEmpresa() {
     return <>
         <MenuBar/>
         <div className="bg_bodyInicio">
-            Hello World
+            <Menuzinho/>
+            <div>
+
+            </div>
         </div>
     </>
 }
