@@ -6,7 +6,7 @@ export default function Menuzinho() {
         <div className="menuzinho">
             <div className="telas1">
                 <Link className="produtos" to={"/inicio/produtos"}>Produtos</Link>
-                <Link className="adicionar" to={"/inicio/adicionar_produtos"}>Adicionar Produtos</Link>
+                <Link className="adicionar" to={"/inicio/cadastrar_produtos"}>Adicionar Produtos</Link>
             </div>
             <div className="perfil1">
                 <Link className="perfil" to={"/inicio/perfil"}>Perfil</Link>

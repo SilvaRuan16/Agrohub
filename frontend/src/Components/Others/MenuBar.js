@@ -1,5 +1,5 @@
 import '../Style/MenuBar.css';
-import Logo from '../Image/Logo_AgroHub.png';
+import Logo from '../Image/Logo_AgroHub copy.png';
 import User from '../Image/Logo_User.png';
 import Pesquisar from '../Image/lupa.png';
 
@@ -8,7 +8,7 @@ export default function MenuBar() {
         <div className="bg_menu">
             <div className='startMenuBar'>
                 <div className='picture_div'>
-                    <img className="logo" src={Logo} alt="Logo" />
+                    <img className="logo1" src={Logo} alt="Logo" />
                 </div>
                 <h3 className='saudacao'>Seja bem vindo</h3>
             </div>

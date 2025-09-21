@@ -21,10 +21,12 @@ export default function Login() {
                             <input className="cpf_cnpj" type="text" placeholder="CPF/CNPJ" />
                         </div>
                         <div className="checkbox">
-                            <input type="radio" id="cpf" name="userType" />
-                            <label htmlFor="cpf">CPF</label>
-                            <input type="radio" id="cnpj" name="userType" />
-                            <label htmlFor="cnpj">CNPJ</label>
+                            <label htmlFor="tipo" className="tipos">Tipo de usuário</label>
+                            <select id="tipo-usuario" name="tipo-usuario">
+                                <option value="" disabled selected>Selecione um usuário</option>
+                                <option value="moderador">Vendedor</option>
+                                <option value="cliente">Cliente</option>
+                            </select>
                         </div>
                         <div className="div_user">
                             <label className="labelInput" htmlFor='senha'>Senha</label>
@@ -33,9 +35,10 @@ export default function Login() {
                         <button className="entrar" type="submit">
                             ENTRAR
                         </button>
-                        <Link to={"/refefinir_senha"}>Redefinir Senha</Link>
+                        <Link to={"/refefinir_senha"}>Esqueci a senha</Link>
                     </div>
                 </form>
+                <Link to={"/criar_conta"}>Não possui uma conta? Criar conta</Link>
             </Div2>
         </Container>
     );

@@ -20,10 +20,12 @@ export default function RedefinirSenha() {
                             <input className="cpf_cnpj" type="text" placeholder="CPF/CNPJ" />
                         </div>
                         <div className="checkbox">
-                            <input type="radio" id="cpf" name="userType" />
-                            <label htmlFor="cpf">CPF</label>
-                            <input type="radio" id="cnpj" name="userType" />
-                            <label htmlFor="cnpj">CNPJ</label>
+                            <label htmlFor="tipo" className="tipos">Tipo de usuário</label>
+                            <select id="tipo-usuario" name="tipo-usuario">
+                                <option value="" disabled selected>Selecione um usuário</option>
+                                <option value="moderador">Vendedor</option>
+                                <option value="cliente">Cliente</option>
+                            </select>
                         </div>
                         <div className="div_user">
                             <label className="labelInput" htmlFor='email'>E-mail</label>
