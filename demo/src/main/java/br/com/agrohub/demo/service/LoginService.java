@@ -1,10 +1,13 @@
 package br.com.agrohub.demo.service;
 
+import java.util.Optional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import br.com.agrohub.demo.dto.LoginDTO;
 import br.com.agrohub.demo.exception.UsuarioDuplicadoException;
@@ -45,21 +48,20 @@ public class LoginService extends GenericService<LoginModel, LoginDTO> {
         return passwordEncoder.matches(senha, usuario.getPassword());
     }
 
-    public LoginDTO getTodos(LoginDTO entityDTO) throws Exception {
-        if (entityDTO == null || entityDTO.getUsername() == null) {
-            throw new Exception("Usuário não informado.");
-        }
-
-        LoginModel usuario = usuarioRepository.findByUsername(entityDTO.getUsername());
-        if (usuario == null) {
-            throw new Exception("Cliente não encontrado.");
-        }
-        return toDTO(usuario);
+    // Correct method returning LoginDTO
+    @GetMapping
+    public LoginDTO getTodos(@RequestParam LoginDTO dto2) {
+        LoginModel usuario = usuarioRepository.findByUsername(dto2.getUsername());
+        LoginDTO dto = this.toDTO(usuario);
+        return dto;
     }
 
     public LoginDTO buscarPorId(Long id) throws Exception {
-        return toDTO(usuarioRepository.findById(id).orElseThrow(
-                () -> new Exception("ID inválido.")));
+        Optional<LoginModel> usuario = usuarioRepository.findById(id);
+        if (!usuario.isPresent()) {
+            throw new Exception("ID inválido.");
+        }
+        return toDTO(usuario.get());
     }
 
     public void validarLogin(LoginDTO dto) throws Exception {

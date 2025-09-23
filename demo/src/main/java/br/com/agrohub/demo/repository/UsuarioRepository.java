@@ -17,7 +17,7 @@ public interface UsuarioRepository extends JpaRepository<LoginModel, Long> {
 
     LoginModel findByUsernameContainingIgnoreCase(String username);
 
-    @Query("FROM Login e WHERE e.username like %?1 username")
+    @Query("SELECT e FROM LoginModel e WHERE e.username LIKE %?1%")
     LoginModel findByMinhaQuery(String username);
 
     boolean existsByUsername (String username);

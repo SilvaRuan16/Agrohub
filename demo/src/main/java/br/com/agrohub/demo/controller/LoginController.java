@@ -17,33 +17,34 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoginController {
 
     @Autowired
-    LoginService LoginService;
+    LoginService loginService;
 
     @GetMapping("/login")
     public LoginDTO getTodos(@RequestParam String username) throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setUsername(username);
-        return LoginService.getTodos(dto);
+        return loginService.getTodos(dto);
     }
 
+    // Correct method returning LoginDTO
     @GetMapping("/login/{id}")
     public LoginDTO buscarPorId(@PathVariable Long id) throws Exception {
-        return LoginService.buscarPorId(id);
+        return loginService.buscarPorId(id);
     }
 
     @PostMapping("/login")
     public LoginDTO cadastrar(@RequestBody LoginDTO entityDTO) throws Exception {
-        return LoginService.cadastrar(entityDTO);
+        return loginService.cadastrar(entityDTO);
     }
 
     @PutMapping("/login/{id}")
     public LoginDTO atualizar(@PathVariable Long id, @RequestBody LoginDTO newData) throws Exception {
-        return LoginService.atualizar(id, newData);
+        return loginService.atualizar(id, newData);
     }
 
     @DeleteMapping("/login/{id}")
     public void deletar(@PathVariable Long id) throws Exception {
-        LoginService.deletar(id);
+        loginService.deletar(id);
     }
 
 }
