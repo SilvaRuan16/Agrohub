@@ -1,0 +1,168 @@
+.form_cadastroProdutos {
+    width: 100%;
+    height: auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    align-items: center;
+    justify-items: center;
+    background-color: #fbf6ec;
+}
+
+.titulo {
+    font-size: 24px;
+    font-family: "Open Sans", sans-serif;
+    margin-top: 25px;
+}
+
+.camposCadastroProdutos {
+    grid-template-rows: auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
+}
+
+.Nome_CodigoInternoLabels {
+    display: grid;
+    grid-template-columns: auto auto;
+    width: 100%;
+}
+
+.divs {
+    display: grid;
+    grid-template-columns: 45% auto 45%;
+    margin-top: 30px;
+    align-items: center;
+    width: 100%;
+}
+
+.tituloCampo {
+    font-size: 18px;
+    font-family: "Open Sans", sans-serif;
+    width: auto;
+}
+
+.inputCampo {
+    width: 400px;
+    height: 40px;
+    margin-top: 5px;
+    font-size: 18px;
+    padding: 5px;
+    border-radius: 7px;
+    border: 1px solid black;
+}
+
+.inputCampoArea {
+    width: 95%;
+    height: 150px;
+    margin-top: 5px;
+    font-size: 18px;
+    padding: 5px;
+    border-radius: 7px;
+    border: 1px solid black;
+}
+
+.inputCampoK {
+    width: 350px;
+    height: 40px;
+    margin-top: 5px;
+    font-size: 18px;
+    padding: 5px;
+    border-radius: 7px;
+    border: 1px solid black;
+}
+
+.divsPersonalizado {
+    display: grid;
+    grid-template-columns: 45% auto 45%;
+    margin-top: 30px;
+}
+
+.divP {
+    display: grid;
+    grid-template-rows: auto auto;
+}
+
+.cm {
+    display: grid;
+    grid-template-rows: auto auto;
+}
+
+.pk {
+    display: grid;
+    grid-template-rows: auto auto;
+}
+
+.divEscrevers {
+    margin-top: 30px;
+}
+
+.divDecoracao {
+    background-color: white;
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    grid-template-rows: auto auto;
+    width: 400px;
+    border: 1px solid black;
+    border-radius: 10px;
+    height: 140px;
+    margin-top: 5px;
+}
+
+.t {
+    width: 300px;
+    font-size: 12px;
+    font-family: "Open Sans", sans-serif;
+}
+
+.formatButton {
+    width: 400px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background-color: rgb(9, 51, 28);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.formatButtonS {
+    width: 350px;
+    height: 50px;
+    border-radius: 10px;
+    border: none;
+    background-color: rgb(9, 51, 28);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px;
+    font-size: 16px;
+    margin: 80px;
+}
+
+.formatButton:hover {
+    background-color: rgb(12, 63, 35);
+}
+
+.formatButtonS:hover {
+    background-color: rgb(12, 63, 35);
+}
+
+.divFG {
+    display: grid;
+    grid-template-rows: auto auto;
+    margin-top: 30px;
+}
+
+.divF {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+    margin-top: 70px;
+}
+
+.save {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
