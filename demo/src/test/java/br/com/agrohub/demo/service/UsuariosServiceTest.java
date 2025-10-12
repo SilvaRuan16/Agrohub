@@ -100,7 +100,7 @@ class UsuariosServiceTest {
         when(usuariosRepository.findByEmail("jose")).thenReturn(sampleModel);
         when(mapper.map(sampleModel, UsuarioDTO.class)).thenReturn(mappedDto);
 
-        UsuarioDTO result = usuariosService.getTodos(mappedDto);
+        UsuarioDTO result = usuariosService.buscarTodos(mappedDto);
         assertNotNull(result);
         assertNull(result.getSenha(), "A senha deve ser removida do DTO retornado");
     }
@@ -108,7 +108,7 @@ class UsuariosServiceTest {
     // getTodos: argumento nulo -> Exception
     @Test
     void testGetTodosNulo() {
-        Exception ex = assertThrows(Exception.class, () -> usuariosService.getTodos(null));
+        Exception ex = assertThrows(Exception.class, () -> usuariosService.buscarTodos(null));
         assertEquals("Usuário não informado.", ex.getMessage());
     }
 
@@ -119,7 +119,7 @@ class UsuariosServiceTest {
         dto.setEmail("noone");
         when(usuariosRepository.findByEmail("noone")).thenReturn(null);
 
-        Exception ex = assertThrows(Exception.class, () -> usuariosService.getTodos(dto));
+        Exception ex = assertThrows(Exception.class, () -> usuariosService.buscarTodos(dto));
         assertEquals("Cliente não encontrado.", ex.getMessage());
     }
 

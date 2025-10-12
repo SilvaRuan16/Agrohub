@@ -1,7 +1,7 @@
 package br.com.agrohub.demo.exception;
 
 public class UsuarioDuplicadoException extends RuntimeException {
-    public UsuarioDuplicadoException(String nomeUsuario) {
-        super("O usuário: " + nomeUsuario + " já existe.");
+    public UsuarioDuplicadoException(String usuario) {
+        super("O usuário: " + usuario + " já existe.");
     }
 }

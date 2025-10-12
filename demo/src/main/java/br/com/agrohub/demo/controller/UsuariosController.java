@@ -20,10 +20,10 @@ public class UsuariosController {
     UsuariosService usuariosService;
 
     @GetMapping("/login")
-    public UsuarioDTO getTodos(@RequestParam String email) throws Exception {
+    public UsuarioDTO buscarTodos(@RequestParam String email) throws Exception {
         UsuarioDTO dto = new UsuarioDTO();
         dto.setEmail(email);
-        return usuariosService.getTodos(dto);
+        return usuariosService.buscarTodos(dto);
     }
 
     @GetMapping("/login/{id}")

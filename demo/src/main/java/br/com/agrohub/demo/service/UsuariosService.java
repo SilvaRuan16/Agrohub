@@ -1,12 +1,9 @@
 package br.com.agrohub.demo.service;
 
 import java.util.Optional;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import br.com.agrohub.demo.dto.UsuarioDTO;
@@ -18,27 +15,10 @@ import br.com.agrohub.demo.repository.UsuariosRepository;
 public class UsuariosService extends GenericService<Usuarios, UsuarioDTO> {
 
     @Autowired
-    private ModelMapper mapper;
-
-    @Autowired
     private UsuariosRepository usuariosRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Override
-    protected UsuarioDTO toDTO(Usuarios entity) {
-        UsuarioDTO dto = mapper.map(entity, UsuarioDTO.class);
-        if (dto != null) {
-            dto.setSenha(null);
-        }
-        return dto;
-    }
-
-    @Override
-    protected Usuarios toEntity(UsuarioDTO dto) {
-        return mapper.map(dto, Usuarios.class);
-    }
 
     public boolean autenticar(String email, String senha) {
         Usuarios usuario = usuariosRepository.findByEmail(email);
@@ -48,8 +28,7 @@ public class UsuariosService extends GenericService<Usuarios, UsuarioDTO> {
         return passwordEncoder.matches(senha, usuario.getSenha());
     }
 
-    @GetMapping
-    public UsuarioDTO getTodos(@RequestParam UsuarioDTO dto2) {
+    public UsuarioDTO buscarTodos(@RequestParam UsuarioDTO dto2) {
         Usuarios usuario = usuariosRepository.findByEmail(dto2.getEmail());
         UsuarioDTO dto = this.toDTO(usuario);
         return dto;
@@ -70,21 +49,12 @@ public class UsuariosService extends GenericService<Usuarios, UsuarioDTO> {
     }
 
     public UsuarioDTO cadastrar(UsuarioDTO entityDTO) throws Exception {
-        validarLogin(entityDTO);
-        entityDTO.setId_usuario(null);
-
-        if (entityDTO.getSenha() == null || entityDTO.getSenha().isBlank()) {
-            throw new Exception("Senha não informada.");
-        }
-
-        entityDTO.setSenha(passwordEncoder.encode(entityDTO.getSenha()));
-
-        try {
+        
+        validarLogin(entityDTO);  
+        try{    
             return toDTO(usuariosRepository.save(toEntity(entityDTO)));
-        } catch (DataIntegrityViolationException e) {
-            throw new Exception("Erro de integridade ao salvar o usuário: " + e.getMostSpecificCause().getMessage(), e);
-        } catch (Exception e) {
-            throw new Exception("Erro inesperado ao salvar o usuário: " + e.getMessage(), e);
+        }catch(Exception e){
+            throw new Exception("Erro ao salvar o estado.");
         }
     }
 
