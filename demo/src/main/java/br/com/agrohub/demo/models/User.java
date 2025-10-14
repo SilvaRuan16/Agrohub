@@ -1,10 +1,21 @@
 package br.com.agrohub.demo.models;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column; 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "usuarios")
@@ -28,23 +39,25 @@ public class User {
     private String cnpj; // Pode ser nulo se for CPF puro
 
     @Column(nullable = false)
-    private String senha; // O nome 'senha' é o que está no banco, mas pode ser 'password' no Java para ser mais idiomático
+    // O campo 'senha' é o que define o Setter como setSenha() (corrigido nos Mappers)
+    private String senha; 
 
     @Enumerated(EnumType.STRING) // Garante que salve a string 'EMPRESA' ou 'CLIENTE' no banco
     @Column(name = "tipo_usuario", nullable = false, length = 20)
-    private UserType tipoUsuario;
+    private UserType tipoUsuario; // Usa o Enum importado
 
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;
 
-    // Enum para o tipo de usuário (melhora a segurança e leitura)
+    // REMOVIDO: A definição interna do enum UserType foi removida para usar o arquivo UserType.java criado.
+    /*
     public enum UserType {
         EMPRESA,
         CLIENTE
     }
+    */
 
-    // Relacionamentos One-to-One (se o usuário for cliente OU empresa)
-    // Opcional: Apenas para facilitar a navegação (fetch automático se necessário)
+    // Relacionamentos One-to-One
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Client client;
 

@@ -1,16 +1,16 @@
 package br.com.agrohub.demo.dto;
 
 import java.io.Serializable;
-import java.time.LocalDateTime; // Para registrar a data e hora do comentário
+import java.time.LocalDateTime;
 
 public class ComentarioDTO implements Serializable {
 
     private Long id;
-    private Long idCliente; // Opcional: Se for anônimo, pode vir null ou ser usado para rastreio
+    private Long idCliente; 
 
     // Dados para exibição na tela (ClientProductDetailScreen.jsx)
-    private String nomeCliente; // Nome do cliente que avaliou
-    private Integer avaliacao; // Nota de 1 a 5
+    private String nomeCliente; 
+    private Integer avaliacao; // Nota de 1 a 5 (Integer)
     private String comentario;
     private LocalDateTime dataComentario;
 
@@ -18,7 +18,7 @@ public class ComentarioDTO implements Serializable {
     public ComentarioDTO() {
     }
 
-    // Construtor com todos os campos
+    // [1. Construtor Original de 6 campos]
     public ComentarioDTO(Long id, Long idCliente, String nomeCliente, Integer avaliacao, String comentario,
             LocalDateTime dataComentario) {
         this.id = id;
@@ -29,11 +29,26 @@ public class ComentarioDTO implements Serializable {
         this.dataComentario = dataComentario;
     }
 
+    // [2. CONSTRUTOR CORRIGIDO PARA O ProductMapper - 5 campos]
+    // O ProductMapper envia (Long, String, String, Double, LocalDateTime)
+    public ComentarioDTO(Long id, String nomeCliente, String comentario, Double rating,
+            LocalDateTime dataComentario) {
+        this.id = id;
+        this.nomeCliente = nomeCliente;
+        this.comentario = comentario;
+        
+        // Converte o Double (rating) do Model para o Integer (avaliacao) do DTO
+        this.avaliacao = rating != null ? rating.intValue() : 0;
+        
+        this.dataComentario = dataComentario;
+        this.idCliente = null; // Definindo como null, pois o Mapper não o fornece
+    }
+
     // Getters e Setters
     public Long getId() {
         return id;
     }
-
+    // ... (restante dos Getters/Setters) ...
     public void setId(Long id) {
         this.id = id;
     }

@@ -1,9 +1,10 @@
 package br.com.agrohub.demo.mappers;
 
-import br.com.agrohub.demo.dto.EnderecoDTO; // DTOs Comuns
-import br.com.agrohub.demo.models.Contact;        // CORRIGIDO: models.Contact
-import br.com.agrohub.demo.models.Address;       // CORRIGIDO: models.Address
 import org.springframework.stereotype.Component;
+
+import br.com.agrohub.demo.dto.EnderecoDTO;
+import br.com.agrohub.demo.models.Address;
+import br.com.agrohub.demo.models.Contact;
 
 /**
  * Mapper para entidades e DTOs de uso comum em diversas entidades (Address, Contact).
@@ -18,36 +19,46 @@ public class CommonMapper {
     /**
      * Converte EnderecoDTO para a entidade Address.
      */
-    public Address toAddressEntity(EnderecoDTO dto) { // Renomeado para toAddressEntity
+    public Address toAddressEntity(EnderecoDTO dto) {
         if (dto == null) return null;
 
         Address entity = new Address();
         entity.setCep(dto.getCep());
-        entity.setStreet(dto.getRua()); // Assumindo que Rua na DTO mapeia para Street na Entidade
-        entity.setNumber(dto.getNumero());
-        entity.setNeighborhood(dto.getBairro());
-        entity.setCity(dto.getCidade());
-        entity.setState(dto.getEstado());
-        entity.setComplement(dto.getComplemento());
-        entity.setReference(dto.getReferencia());
+        
+        // CORREÇÃO: Usando setters do Address.java em Português
+        entity.setRua(dto.getRua()); 
+        entity.setNumero(dto.getNumero());
+        entity.setBairro(dto.getBairro());
+        entity.setCidade(dto.getCidade());
+        entity.setEstado(dto.getEstado());
+        
+        // AVISO: Os campos 'Complemento' e 'Referencia' não existem na sua entidade Address.java
+        // Se a entidade Address for atualizada, estas linhas devem ser descomentadas:
+        // entity.setComplemento(dto.getComplemento()); 
+        // entity.setReferencia(dto.getReferencia());
+        
         return entity;
     }
 
     /**
      * Converte a entidade Address para EnderecoDTO.
      */
-    public EnderecoDTO toAddressDTO(Address entity) { // Renomeado para toAddressDTO
+    public EnderecoDTO toAddressDTO(Address entity) {
         if (entity == null) return null;
 
         EnderecoDTO dto = new EnderecoDTO();
         dto.setCep(entity.getCep());
-        dto.setRua(entity.getStreet());
-        dto.setNumero(entity.getNumber());
-        dto.setBairro(entity.getNeighborhood());
-        dto.setCidade(entity.getCity());
-        dto.setEstado(entity.getState());
-        dto.setComplemento(entity.getComplement());
-        dto.setReferencia(entity.getReference());
+        
+        // CORREÇÃO: Usando getters do Address.java em Português
+        dto.setRua(entity.getRua());
+        dto.setNumero(entity.getNumero());
+        dto.setBairro(entity.getBairro());
+        dto.setCidade(entity.getCidade());
+        dto.setEstado(entity.getEstado());
+        
+        // AVISO: Se os campos 'Complemento' e 'Referencia' forem adicionados ao Address.java,
+        // estas linhas devem ser atualizadas para buscar os dados corretamente.
+        
         return dto;
     }
 
@@ -57,12 +68,18 @@ public class CommonMapper {
 
     /**
      * Cria uma entidade Contact a partir de dados de um DTO de registro.
+     * Assinatura corrigida para 3 argumentos (conforme ClientMapper e CompanyMapper)
      */
-    public Contact createContactEntity(String telefone, String urlSite, String email) { // Renomeado para createContactEntity
+    public Contact createContactEntity(String telefone, String email, String urlSite) { 
         Contact entity = new Contact();
-        entity.setPhone(telefone); // Assumindo que Telefone mapeia para Phone
-        entity.setWebsiteUrl(urlSite); 
+        
+        // CORREÇÃO: Usando setters do Contact.java (assumindo que usa os campos em Português que você forneceu: telefone, email, urlSite)
+        entity.setTelefone(telefone); 
         entity.setEmail(email);
+        entity.setUrlSite(urlSite); 
+        
+        // Se a assinatura for diferente ou o Contact.java usar outros nomes (ex: redeSocial), precisa ser ajustado.
+        
         return entity;
     }
 }

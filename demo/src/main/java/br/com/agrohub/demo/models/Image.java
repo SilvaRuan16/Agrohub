@@ -29,6 +29,7 @@ public class Image {
     @JoinColumn(name = "produto_id", nullable = false)
     private Product product;
 
+    // 🎯 CORREÇÃO APLICADA AQUI: Renomeado de 'imagem' para 'url'
     @Column(nullable = false, length = 255)
-    private String imagem; // URL ou caminho do arquivo
+    private String url; // Agora o Lombok gera o método getUrl()
 }

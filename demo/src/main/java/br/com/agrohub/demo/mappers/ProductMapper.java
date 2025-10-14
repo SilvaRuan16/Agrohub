@@ -1,10 +1,14 @@
 package br.com.agrohub.demo.mappers;
 
-import br.com.agrohub.demo.dto.product.CompanyResumeDTO; // Adicionado e corrigido
-import br.com.agrohub.demo.dto.product.ProductCardResponseDTO; // Adicionado e corrigido
-import br.com.agrohub.demo.dto.product.ProductDetailResponseDTO; // CORRIGIDO: Agora aponta para dto.product
-import br.com.agrohub.demo.dto.product.ComentarioDTO; // CORRIGIDO: Agora aponta para dto.product
-import br.com.agrohub.demo.dto.product.AddProductRequestDTO; // Adicionado (DTO de requisição)
+// DTOs (Assumindo que estão no pacote base 'dto', conforme a estrutura de arquivos)
+import br.com.agrohub.demo.dto.CompanyResumeDTO;
+import br.com.agrohub.demo.dto.ProductCardResponseDTO;
+import br.com.agrohub.demo.dto.ProductDetailResponseDTO;
+import br.com.agrohub.demo.dto.ComentarioDTO;
+import br.com.agrohub.demo.dto.AddProductRequestDTO;
+import br.com.agrohub.demo.dto.EnderecoDTO; // Necessário para o CommonMapper
+
+// Entidades (models)
 import br.com.agrohub.demo.models.Product;
 import br.com.agrohub.demo.models.Company;
 import br.com.agrohub.demo.models.Comment;
@@ -12,7 +16,8 @@ import br.com.agrohub.demo.models.AdditionalInfo;
 import br.com.agrohub.demo.models.ProductType;
 import br.com.agrohub.demo.models.Discount;
 import br.com.agrohub.demo.models.Image;
-import br.com.agrohub.demo.models.Address; // Necessário para a referência no toProductDetailDTO
+import br.com.agrohub.demo.models.Address;
+import br.com.agrohub.demo.models.Client; // Necessário para o ComentarioDTO
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,7 +32,6 @@ import java.util.stream.Collectors;
 @Component
 public class ProductMapper {
 
-    // Injetando CommonMapper
     private final CommonMapper commonMapper;
 
     @Autowired
@@ -39,7 +43,6 @@ public class ProductMapper {
     // 1. MAPEAR PARA CARD
     // =================================================================
 
-    // [CÓDIGO DE toProductCardDTO, toCompanyResumeDTO, etc. continua o mesmo]
     public ProductCardResponseDTO toProductCardDTO(Product product) {
         if (product == null)
             return null;
@@ -47,30 +50,25 @@ public class ProductMapper {
         Double ratingMedio = this.calculateAverageRating(product.getComments());
         Integer totalAvaliacoes = product.getComments() != null ? product.getComments().size() : 0;
 
-        // O construtor abaixo exige que ProductCardResponseDTO tenha um construtor
-        // completo ou use @Builder
-        // Se der erro, remova o 'new' e use ProductCardResponseDTO.builder()...build()
         return new ProductCardResponseDTO(
-                product.getId(),
-                product.getName(),
-                product.getSalePrice(),
-                product.getUnitOfMeasurement(),
-                product.getImages().stream().map(Image::getUrl).collect(Collectors.toList()),
-                ratingMedio,
-                totalAvaliacoes,
-                this.toCompanyResumeDTO(product.getCompany()));
+                product.getId(), // -> Mapeia para o campo 'id'
+                product.getNome(), // -> Mapeia para o campo 'nome'
+                product.getPrecoVenda(), // -> Mapeia para o campo 'precoVenda'
+                product.getUnitOfMeasurement(), // -> Mapeia para o campo 'unidadeMedida'
+                product.getImages().stream().map(Image::getUrl).collect(Collectors.toList()), // -> Mapeia para o campo
+                                                                                              // 'imagensUrls'
+                ratingMedio, // -> Mapeia para o campo 'ratingMedio'
+                totalAvaliacoes, // -> Mapeia para o campo 'totalAvaliacoes'
+                this.toCompanyResumeDTO(product.getCompany())); // -> Mapeia para o campo 'empresa'
     }
 
     public CompanyResumeDTO toCompanyResumeDTO(Company company) {
         if (company == null)
             return null;
 
-        // O construtor abaixo exige que CompanyResumeDTO tenha um construtor completo
-        // ou use @Builder
         return new CompanyResumeDTO(
                 company.getId(),
-                company.getNomeFantasia() // Corrigindo para o nome da variável comum em Company
-        );
+                company.getNomeFantasia());
     }
 
     // =================================================================
@@ -85,11 +83,11 @@ public class ProductMapper {
 
         // DADOS PRINCIPAIS (Product)
         dto.setId(product.getId());
-        dto.setNome(product.getName());
-        dto.setPrecoVenda(product.getSalePrice());
+        dto.setNome(product.getNome());
+        dto.setPrecoVenda(product.getPrecoVenda());
         dto.setUnidadeMedida(product.getUnitOfMeasurement());
-        dto.setDescricaoCurta(product.getShortDescription());
-        dto.setDescricaoDetalhada(product.getDetailedDescription());
+        dto.setDescricaoCurta(product.getDescricao());
+        dto.setDescricaoDetalhada(product.getDescricao());
         dto.setImagensUrls(product.getImages().stream().map(Image::getUrl).collect(Collectors.toList()));
 
         // AVALIAÇÃO (Comments)
@@ -104,39 +102,43 @@ public class ProductMapper {
         AdditionalInfo info = product.getAdditionalInfo();
         if (info != null) {
             dto.setNomeProdutor(info.getProdutor());
-            dto.setMunicipio(info.getMunicipio());
+            dto.setMunicipioEmpresa(info.getMunicipio());
             dto.setCnpjProdutor(info.getCnpjProdutor());
-            // CORRIGIDO: Usando o CommonMapper injetado
             dto.setEnderecoProdutor(info.getAddress() != null ? commonMapper.toAddressDTO(info.getAddress()) : null);
-            dto.setTipoProduto(info.getProductType() != null ? info.getProductType().getName() : "Não especificado");
+            dto.setTipoProduto(info.getProductType() != null ? info.getProductType().getTipo() : "Não especificado");
         }
 
         // DESCONTOS
-        Discount activeDiscount = product.getDiscounts().stream()
-                .filter(Discount::isActive)
-                .findFirst().orElse(null);
+        // 🎯 CORREÇÃO APLICADA AQUI: Usando product.getDiscount() para @OneToOne e
+        // checando se está ativo
+        // DESCONTOS
+        Discount activeDiscount = product.getDiscount();
 
-        if (activeDiscount != null) {
-            dto.setDescontoMaximo(activeDiscount.getMaxPercentage());
+        // 🎯 CORREÇÃO 1: Mantendo isAtivo(), mas você deve checar se esse é o nome do
+        // método em Discount
+        if (activeDiscount != null && activeDiscount.isAtivo()) {
+
+            // 🎯 CORREÇÃO 2: Conversão de BigDecimal para Double
+            dto.setDescontoMaximo(activeDiscount.getPercentual().doubleValue());
+
+        } else {
+            dto.setDescontoMaximo(null);
         }
 
         return dto;
     }
 
-    // [CÓDIGO dos métodos auxiliares toComentarioDTOList e calculateAverageRating
-    // continua o mesmo]
     private List<ComentarioDTO> toComentarioDTOList(List<Comment> comments) {
         if (comments == null)
             return List.of();
 
-        // O construtor abaixo exige que ComentarioDTO tenha um construtor completo ou
-        // use @Builder
         return comments.stream().map(comment -> new ComentarioDTO(
                 comment.getId(),
-                comment.getClient().getFullName(),
-                comment.getCommentText(),
+                // Getters em Português de Client e Comment
+                comment.getClient().getNomeCompleto(),
+                comment.getComentario(),
                 comment.getRating(),
-                comment.getCommentDate())).collect(Collectors.toList());
+                comment.getDataComentario())).collect(Collectors.toList());
     }
 
     private Double calculateAverageRating(List<Comment> comments) {
@@ -153,25 +155,27 @@ public class ProductMapper {
     // 3. MAPEAR PARA ENTIDADES
     // =================================================================
 
-    // [CÓDIGO de toProductEntity e toAdditionalInfoEntity continua o mesmo]
     public Product toProductEntity(AddProductRequestDTO dto, Company company) {
         Product product = new Product();
 
         product.setCompany(company);
-        product.setName(dto.getName());
-        product.setShortDescription(dto.getShortDescription());
-        product.setDetailedDescription(dto.getDetailedDescription());
-        product.setSalePrice(dto.getSalePrice());
-        product.setCostPrice(dto.getCostPrice());
-        product.setMinStock(dto.getMinStock());
-        product.setCurrentStock(dto.getInitialStock());
-        product.setUnitOfMeasurement(dto.getUnitOfMeasurement());
+        // Setters em Português do Model Product
+        product.setNome(dto.getName());
+        product.setDescricao(dto.getShortDescription());
+        product.setDescricao(dto.getDetailedDescription());
+        product.setPrecoVenda(dto.getSalePrice());
+        product.setPrecoCompra(dto.getCostPrice());
+        product.setQuantidadeMinEstoque(dto.getMinStock()); // CORRIGIDO: Assume-se que o setter é
+                                                            // setQuantidadeMinEstoque
+        product.setQuantidadeEstoque(dto.getInitialStock()); // CORRIGIDO: Assume-se que o setter é setQuantidadeEstoque
+        product.setUnitOfMeasurement(dto.getUnitOfMeasurement()); // <-- CORRIGIDO AQUI
 
         return product;
     }
 
     public AdditionalInfo toAdditionalInfoEntity(AddProductRequestDTO dto, Product product, ProductType productType) {
         AdditionalInfo info = new AdditionalInfo();
+        // Setters em Português do Model AdditionalInfo
         info.setProdutor(dto.getProdutorName());
         info.setMunicipio(dto.getMunicipality());
         info.setCnpjProdutor(dto.getProducerCnpj());

@@ -1,11 +1,22 @@
 package br.com.agrohub.demo.models;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "produtos")
@@ -41,6 +52,10 @@ public class Product {
 
     @Column(name = "preco_venda", precision = 10, scale = 2)
     private BigDecimal precoVenda;
+    
+    // 🎯 CORREÇÃO APLICADA AQUI: Campo da unidade de medida
+    @Column(name = "unidade_medida", length = 20, nullable = false) // Garante que a unidade será salva no DB
+    private String unitOfMeasurement; // O Lombok gera o getUnitOfMeasurement()
 
     @Column(name = "quantidade_estoque")
     private Integer quantidadeEstoque;
@@ -54,24 +69,24 @@ public class Product {
     // Relacionamentos One-to-One/Many-to-One
     @ManyToOne
     @JoinColumn(name = "categoria_id")
-    private Category category; // Usando Category.java (a ser criado)
+    private Category category; 
 
     @ManyToOne
     @JoinColumn(name = "forma_pagamento_id")
-    private PaymentMethod paymentMethod; // Usando PaymentMethod.java (a ser criado)
+    private PaymentMethod paymentMethod; 
 
     @OneToOne
     @JoinColumn(name = "desconto_id")
-    private Discount discount; // Usando Discount.java (a ser criado)
+    private Discount discount; 
 
     @OneToOne
     @JoinColumn(name = "informacao_adicional_id")
-    private AdditionalInfo additionalInfo; // Usando AdditionalInfo.java (a ser criado)
+    private AdditionalInfo additionalInfo; 
     
     // Relacionamento One-to-Many com Imagens e Comentários
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Image> images; // Usando Image.java (a ser criado)
+    private List<Image> images; 
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments; // Usando Comment.java (a ser criado)
+    private List<Comment> comments; 
 }

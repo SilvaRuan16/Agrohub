@@ -1,3 +1,4 @@
+// SEU DTO JÁ ESTÁ CORRETO
 package br.com.agrohub.demo.dto;
 
 import java.io.Serializable;
@@ -21,9 +22,10 @@ public class ProductCardResponseDTO implements Serializable {
     private Long id;
     private String nome;
     private BigDecimal precoVenda;
-    private String unidadeMedida; // Ex: "kg", "unidade"
-    private List<String> imagensUrls; // Lista de URLs para as imagens de exibição
+    private String unidadeMedida; // Campo corrigido para o DTO
+    private List<String> imagensUrls;
     private Double ratingMedio;
     private Integer totalAvaliacoes;
-    private CompanyResumeDTO empresa; // DTO que acabamos de criar
+    private CompanyResumeDTO empresa; 
+    
 }
