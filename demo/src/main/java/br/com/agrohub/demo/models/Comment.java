@@ -39,8 +39,9 @@ public class Comment {
     @Column(nullable = false, columnDefinition = "text")
     private String comentario;
 
-    // Avaliação de 1 a 5
-    private Integer avaliacao;
+    // 🎯 CORREÇÃO APLICADA AQUI: Renomeado de 'avaliacao' para 'rating'
+    @Column(name = "rating") // Adicionado o name="rating" para mapeamento de coluna
+    private Integer rating; // Agora o Lombok gera o método public Integer getRating()
 
     @Column(name = "data_comentario")
     private LocalDateTime dataComentario;

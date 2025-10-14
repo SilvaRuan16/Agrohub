@@ -27,6 +27,8 @@ public class Discount {
     @Column(precision = 5, scale = 2, nullable = false)
     private BigDecimal percentual;
     
-    // Campo de validação do banco 'check (percentual >= 0 and percentual <= 100)'
-    // Essa lógica deve ser implementada na camada Service ou via validação JSR-303 (@Min, @Max).
+    // 🎯 CORREÇÃO APLICADA AQUI: Campo para indicar se o desconto está ativo
+    @Column(name = "ativo", nullable = false)
+    private boolean ativo; // O Lombok agora gera o método public boolean isAtivo()
+
 }

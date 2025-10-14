@@ -1,9 +1,9 @@
-package br.com.agrohub.demo.services;
+package br.com.agrohub.demo.security;
 
-import br.com.agrohub.demo.dtos.auth.TokenResponseDTO;
+import br.com.agrohub.demo.dto.TokenResponseDTO;
 import br.com.agrohub.demo.models.User;
 import br.com.agrohub.demo.models.UserType;
-import br.com.agrohub.demo.repositories.UserRepository;
+import br.com.agrohub.demo.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

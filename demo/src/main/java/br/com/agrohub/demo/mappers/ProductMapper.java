@@ -1,29 +1,24 @@
 package br.com.agrohub.demo.mappers;
 
 // DTOs (Assumindo que estão no pacote base 'dto', conforme a estrutura de arquivos)
-import br.com.agrohub.demo.dto.CompanyResumeDTO;
-import br.com.agrohub.demo.dto.ProductCardResponseDTO;
-import br.com.agrohub.demo.dto.ProductDetailResponseDTO;
-import br.com.agrohub.demo.dto.ComentarioDTO;
-import br.com.agrohub.demo.dto.AddProductRequestDTO;
-import br.com.agrohub.demo.dto.EnderecoDTO; // Necessário para o CommonMapper
-
-// Entidades (models)
-import br.com.agrohub.demo.models.Product;
-import br.com.agrohub.demo.models.Company;
-import br.com.agrohub.demo.models.Comment;
-import br.com.agrohub.demo.models.AdditionalInfo;
-import br.com.agrohub.demo.models.ProductType;
-import br.com.agrohub.demo.models.Discount;
-import br.com.agrohub.demo.models.Image;
-import br.com.agrohub.demo.models.Address;
-import br.com.agrohub.demo.models.Client; // Necessário para o ComentarioDTO
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import br.com.agrohub.demo.dto.AddProductRequestDTO;
+import br.com.agrohub.demo.dto.ComentarioDTO; // Necessário para o CommonMapper
+import br.com.agrohub.demo.dto.CompanyResumeDTO;
+import br.com.agrohub.demo.dto.ProductCardResponseDTO;
+import br.com.agrohub.demo.dto.ProductDetailResponseDTO;
+import br.com.agrohub.demo.models.AdditionalInfo;
+import br.com.agrohub.demo.models.Comment;
+import br.com.agrohub.demo.models.Company;
+import br.com.agrohub.demo.models.Discount;
+import br.com.agrohub.demo.models.Image;
+import br.com.agrohub.demo.models.Product; // Necessário para o ComentarioDTO
+import br.com.agrohub.demo.models.ProductType;
 
 /**
  * Mapper responsável pela conversão entre a Entidade Product e seus DTOs de
