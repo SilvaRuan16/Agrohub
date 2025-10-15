@@ -1,11 +1,21 @@
 package br.com.agrohub.demo.models;
 
-import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.time.LocalDate;
-import java.util.List; // <<< IMPORTAÇÃO NECESSÁRIA
 
 @Entity
 @Table(name = "clientes")
@@ -22,7 +32,7 @@ public class Client {
     // Relacionamento One-to-One com User (Chave Estrangeira)
     @OneToOne
     @JoinColumn(name = "usuario_id", nullable = false)
-    private User user; // Assume-se que User.java está no mesmo pacote ou foi importado
+    private User user;
 
     @Column(name = "nome_completo", nullable = false, length = 120)
     private String nomeCompleto;
@@ -45,10 +55,16 @@ public class Client {
     // Relacionamento One-to-One com Contato
     @OneToOne
     @JoinColumn(name = "contato_id", nullable = false)
-    private Contact contact; // Usando Contact.java (existe)
+    private Contact contact;
 
+    // 🎯 CORREÇÃO 1: Renomeando para 'enderecos' para gerar getEnderecos()
     // Relacionamento One-to-Many com Endereços
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
-    // ClientAddress deve ser criado no próximo passo
-    private List<ClientAddress> clientAddresses; 
+    // Assumindo que a entidade de endereço se chama ClientAddress
+    private List<ClientAddress> enderecos; // Lombok gera getEnderecos()
+
+    // 🎯 CORREÇÃO 2: ADICIONANDO RELACIONAMENTO COM PEDIDOS
+    // Relacionamento One-to-Many com Pedidos
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pedido> pedidos; // Lombok gera getPedidos()
 }
