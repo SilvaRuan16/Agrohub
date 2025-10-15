@@ -1,24 +1,28 @@
 package br.com.agrohub.demo.mappers;
 
 // DTOs
-import java.util.List;
-import java.util.stream.Collectors;
+import br.com.agrohub.demo.dto.ClientProfileResponseDTO;
+import br.com.agrohub.demo.dto.ClientRegisterRequestDTO;
+import br.com.agrohub.demo.dto.HistoricoPedidoDTO;
+import br.com.agrohub.demo.dto.EnderecoDTO; // Importar o DTO de Endereço
+
+// Entidades (models)
+import br.com.agrohub.demo.models.Client;
+import br.com.agrohub.demo.models.User;
+import br.com.agrohub.demo.models.ClientAddress; // 🎯 ESSENCIAL: Sua entidade de endereço
+import br.com.agrohub.demo.models.UserType; 
+import br.com.agrohub.demo.models.Pedido; 
+import br.com.agrohub.demo.models.Contact; 
+import br.com.agrohub.demo.models.ItemPedido; // ESSENCIAL: Para calcular a quantidade no histórico
 
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component; // Certifique-se de que EnderecoDTO existe
+import org.springframework.stereotype.Component;
 
-import br.com.agrohub.demo.dto.ClientProfileResponseDTO;
-import br.com.agrohub.demo.dto.HistoricoPedidoDTO;
-import br.com.agrohub.demo.models.Address;
-import br.com.agrohub.demo.models.Client;
-import br.com.agrohub.demo.models.Contact;
-import br.com.agrohub.demo.models.Pedido; // Adicionado para Contact.java
-import br.com.agrohub.demo.models.User;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.math.BigDecimal; 
+import java.time.LocalDateTime; 
 
-/**
- * Mapper responsável pela conversão entre a Entidade Client e seus DTOs de
- * Registro e Perfil.
- */
 @Component
 public class ClientMapper {
 
@@ -31,23 +35,16 @@ public class ClientMapper {
     }
 
     // =================================================================
-    // 1. MAPEAR PARA ENTIDADES (Registro - Request to Entity)
-    // =================================================================
-
-    // Implementação do toUserEntity e toClientEntity... (Deixando de fora por hora)
-
-    // =================================================================
     // 2. MAPEAR PARA DTO (Perfil - Entity to Response)
     // =================================================================
 
     /**
      * Mapeia Client, Pedidos e Endereços para o DTO de Perfil.
-     * Método usado pelo ClientService.
+     * Assinatura Correta: List<ClientAddress> addresses
      */
-    public ClientProfileResponseDTO toClientProfileDTO(Client client, List<Pedido> pedidos, List<Address> addresses) {
-        // Obter objetos necessários
+    public ClientProfileResponseDTO toClientProfileDTO(Client client, List<Pedido> pedidos, List<ClientAddress> addresses) {
+        
         User user = client.getUser();
-        Contact contact = client.getContact();
 
         ClientProfileResponseDTO dto = new ClientProfileResponseDTO();
 
@@ -55,15 +52,12 @@ public class ClientMapper {
         dto.setId(client.getId());
         dto.setEmail(user.getEmail());
         dto.setNomeCompleto(client.getNomeCompleto());
-        dto.setCpf(user.getCpf()); // CPF vem do User
+        dto.setCpf(user.getCpf()); 
         dto.setRg(client.getRg());
         dto.setDataNascimento(client.getDataNascimento());
-
-        // Telefone vem da entidade Contact
-        dto.setTelefone(contact != null ? contact.getTelefone() : null);
+        dto.setTelefone(client.getContact() != null ? client.getContact().getTelefone() : null); 
 
         // 2. ENDEREÇOS CADASTRADOS
-        // Assumindo que commonMapper.toAddressDTO mapeia Address para EnderecoDTO
         dto.setEnderecos(addresses.stream()
                 .map(commonMapper::toAddressDTO)
                 .collect(Collectors.toList()));
@@ -82,22 +76,20 @@ public class ClientMapper {
             return List.of();
 
         return pedidos.stream().map(pedido -> {
-            // Lógica para obter o nome do item principal (ou um resumo)
-            String itemResumo = "Pedido #" + pedido.getId();
             
-            // O ItemPedido.java tem o campo 'quantidade'. 
-            // Somamos as quantidades dos itens dentro do pedido.
+            // Usando ItemPedido para calcular a quantidade
             Integer quantidadeItens = pedido.getItens().stream()
-                .mapToInt(item -> item.getQuantidade()) // Mapeia para a quantidade
-                .sum(); // Soma todas as quantidades
+                .mapToInt(ItemPedido::getQuantidade) 
+                .sum(); 
 
+            // Construção do DTO
             return new HistoricoPedidoDTO(
                 pedido.getId(),
-                itemResumo, // Ex: "Pedido #123"
-                quantidadeItens, // Total de unidades compradas (quantidade agregada)
+                "Pedido #" + pedido.getId(), 
+                quantidadeItens, 
                 pedido.getValorTotal(),
                 pedido.getDataPedido(),
-                pedido.getStatus().name() // Ex: "EM_TRANSPORTE", "ENTREGUE"
+                pedido.getStatus().name() 
             );
         }).collect(Collectors.toList());
     }

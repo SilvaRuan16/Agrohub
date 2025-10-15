@@ -39,4 +39,8 @@ public class Address {
 
     @Column(nullable = false, length = 8)
     private String cep;
+    
+    // 🎯 CORREÇÃO FINAL: Adição do campo 'complemento'
+    @Column(length = 255)
+    private String complemento;
 }
