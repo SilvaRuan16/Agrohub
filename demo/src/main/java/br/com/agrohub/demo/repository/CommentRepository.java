@@ -14,5 +14,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByProductId(Long productId);
     
     // Buscar todos os comentários de um determinado usuário
-    List<Comment> findByUserId(Long userId);
+    List<Comment> findByClient_UserId(Long userId);
 }

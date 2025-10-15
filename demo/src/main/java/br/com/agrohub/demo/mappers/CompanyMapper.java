@@ -4,7 +4,6 @@ package br.com.agrohub.demo.mappers;
 import java.util.List;
 import java.util.stream.Collectors; 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,6 @@ public class CompanyMapper {
     private final CommonMapper commonMapper;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     public CompanyMapper(CommonMapper commonMapper, PasswordEncoder passwordEncoder) {
         this.commonMapper = commonMapper;
         this.passwordEncoder = passwordEncoder;

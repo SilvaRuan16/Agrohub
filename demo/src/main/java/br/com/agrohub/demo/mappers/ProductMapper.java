@@ -4,7 +4,6 @@ package br.com.agrohub.demo.mappers;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import br.com.agrohub.demo.dto.AddProductRequestDTO;
@@ -29,7 +28,6 @@ public class ProductMapper {
 
     private final CommonMapper commonMapper;
 
-    @Autowired
     public ProductMapper(CommonMapper commonMapper) {
         this.commonMapper = commonMapper;
     }

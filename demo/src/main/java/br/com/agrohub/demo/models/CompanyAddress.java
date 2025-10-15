@@ -37,4 +37,7 @@ public class CompanyAddress {
 
     @Column(name = "tipo_endereco", length = 50)
     private String tipoEndereco; // Ex: "MATRIZ", "FILIAL"
+
+    @Column(name = "principal", nullable = false)
+    private boolean principal;
 }

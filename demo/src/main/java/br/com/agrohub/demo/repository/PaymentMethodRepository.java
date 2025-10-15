@@ -10,7 +10,7 @@ import br.com.agrohub.demo.models.PaymentMethod;
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
 
     // Método customizado para buscar métodos de pagamento pelo nome (ex: "Cartão de Crédito")
-    List<PaymentMethod> findByNome(String nome);
+    List<PaymentMethod> findByFormaPagamento(String formaPagamento);
 
     // Método customizado para buscar apenas métodos que estão ativos
     List<PaymentMethod> findByIsActiveTrue();

@@ -65,6 +65,9 @@ public class Product {
 
     @Column(columnDefinition = "text")
     private String descricao;
+
+    @Column(name = "ativo", nullable = false)
+    private boolean active;
     
     // Relacionamentos One-to-One/Many-to-One
     @ManyToOne

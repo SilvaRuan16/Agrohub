@@ -18,7 +18,7 @@ import java.util.Optional;
 // Por simplicidade, faremos a autenticação baseada no Spring Security.
 
 @Service
-public class AuthService {
+public class AuthSecurity {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -28,7 +28,7 @@ public class AuthService {
     // private final ClientRepository clientRepository;
     // private final CompanyRepository companyRepository;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public AuthSecurity(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
@@ -58,7 +58,7 @@ public class AuthService {
                 .token("SIMULATED_JWT_TOKEN_FOR_USER_" + user.getId())
                 .id(user.getId())
                 .email(user.getEmail())
-                .userType(user.getUserType().name())
+                .userType(user.getTipoUsuario().name())
                 .build();
     }
 
@@ -81,10 +81,10 @@ public class AuthService {
             user.setCnpj(cpfCnpj);
         }
 
-        user.setUserType(userType);
+        user.setTipoUsuario(userType);
         
         // 3. Codifica a senha antes de salvar
-        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setSenha(passwordEncoder.encode(rawPassword));
 
         // 4. Salva o objeto User
         User savedUser = userRepository.save(user);

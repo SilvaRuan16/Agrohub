@@ -37,4 +37,7 @@ public class ClientAddress {
 
     @Column(name = "tipo_endereco", length = 50)
     private String tipoEndereco; // Ex: "COBRANÇA", "ENTREGA"
+
+    @Column(name = "principal", nullable = false)
+    private boolean principal;
 }

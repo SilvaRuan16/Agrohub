@@ -11,9 +11,8 @@ import br.com.agrohub.demo.models.User;
 import br.com.agrohub.demo.models.Address;
 import br.com.agrohub.demo.models.UserType; // Usando o enum externo
 import br.com.agrohub.demo.models.Pedido; // Ainda precisa ser criado
-import br.com.agrohub.demo.models.Contact; // Corrigido para seu modelo de Contact
+// import br.com.agrohub.demo.models.Contact;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +30,6 @@ public class ClientMapper {
     private final CommonMapper commonMapper;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     public ClientMapper(CommonMapper commonMapper, PasswordEncoder passwordEncoder) {
         this.commonMapper = commonMapper;
         this.passwordEncoder = passwordEncoder;

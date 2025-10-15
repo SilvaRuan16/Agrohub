@@ -1,7 +1,6 @@
 package br.com.agrohub.demo.repository; // Pacote conforme solicitado
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,5 +14,5 @@ public interface ClientAddressRepository extends JpaRepository<ClientAddress, Lo
     List<ClientAddress> findByClientId(Long clientId);
     
     // Buscar o endereço principal (se você tiver uma flag 'isPrincipal' na entidade ClientAddress)
-    Optional<ClientAddress> findByClientIdAndIsPrincipalTrue(Long clientId);
+    List<ClientAddress> findByClientIdAndIsPrincipalTrue(Long clientId);
 }

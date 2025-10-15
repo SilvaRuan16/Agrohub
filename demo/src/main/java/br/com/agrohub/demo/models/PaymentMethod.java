@@ -24,4 +24,7 @@ public class PaymentMethod {
 
     @Column(name = "forma_pagamento", nullable = false, length = 50)
     private String formaPagamento;
+
+    @Column(name = "ativo", nullable = false)
+    private boolean active;
 }
