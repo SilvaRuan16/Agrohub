@@ -15,5 +15,5 @@ public interface RepresentativeRepository extends JpaRepository<Representative, 
     
     // Método customizado para buscar representantes de uma empresa específica
     // Útil para listar todos os contatos de uma Company
-    Optional<Representative> findByCompanyId(Long companyId);
+    Optional<Representative> findByCompaniesId(Long companyId);
 }

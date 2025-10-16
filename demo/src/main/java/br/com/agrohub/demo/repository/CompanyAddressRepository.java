@@ -15,5 +15,5 @@ public interface CompanyAddressRepository extends JpaRepository<CompanyAddress, 
     List<CompanyAddress> findByCompanyId(Long companyId);
     
     // Buscar o endereço principal (se você tiver uma flag 'isPrincipal' na entidade CompanyAddress)
-    Optional<CompanyAddress> findByCompanyIdAndIsPrincipalTrue(Long companyId);
+    Optional<CompanyAddress> findByCompanyIdAndPrincipalTrue(Long companyId);
 }

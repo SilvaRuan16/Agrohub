@@ -3,7 +3,6 @@ package br.com.agrohub.demo.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.com.agrohub.demo.dto.ProductCardResponseDTO;
@@ -21,7 +20,6 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
 
-    @Autowired
     public ProductService(ProductRepository productRepository, ProductMapper productMapper) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
@@ -36,7 +34,7 @@ public class ProductService {
         
         // 1. Busca todos os produtos ativos usando o método definido no Repository
         // O campo 'active' no Model Product é usado aqui para filtrar.
-        List<Product> activeProducts = productRepository.findByIsActiveTrue(); 
+        List<Product> activeProducts = productRepository.findByActiveTrue(); 
         
         if (activeProducts.isEmpty()) {
             return List.of(); // Retorna uma lista vazia se não houver produtos ativos

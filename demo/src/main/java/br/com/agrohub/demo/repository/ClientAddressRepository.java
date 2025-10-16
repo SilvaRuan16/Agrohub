@@ -14,5 +14,5 @@ public interface ClientAddressRepository extends JpaRepository<ClientAddress, Lo
     List<ClientAddress> findByClientId(Long clientId);
     
     // Buscar o endereço principal (se você tiver uma flag 'isPrincipal' na entidade ClientAddress)
-    List<ClientAddress> findByClientIdAndIsPrincipalTrue(Long clientId);
+    List<ClientAddress> findByClientIdAndPrincipalTrue(Long clientId);
 }

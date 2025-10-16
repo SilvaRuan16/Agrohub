@@ -13,5 +13,5 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
     List<PaymentMethod> findByFormaPagamento(String formaPagamento);
 
     // Método customizado para buscar apenas métodos que estão ativos
-    List<PaymentMethod> findByIsActiveTrue();
+    List<PaymentMethod> findByActiveTrue();
 }

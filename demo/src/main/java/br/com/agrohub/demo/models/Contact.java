@@ -35,4 +35,7 @@ public class Contact {
 
     @OneToOne(mappedBy = "contact")
     private Client client;
+
+    @OneToOne(mappedBy = "contact") 
+    private Company company;
 }

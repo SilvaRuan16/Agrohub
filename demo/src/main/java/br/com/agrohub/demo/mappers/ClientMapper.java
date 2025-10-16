@@ -2,17 +2,13 @@ package br.com.agrohub.demo.mappers;
 
 // DTOs
 import br.com.agrohub.demo.dto.ClientProfileResponseDTO;
-import br.com.agrohub.demo.dto.ClientRegisterRequestDTO;
 import br.com.agrohub.demo.dto.HistoricoPedidoDTO;
-import br.com.agrohub.demo.dto.EnderecoDTO; // Importar o DTO de Endereço
 
 // Entidades (models)
 import br.com.agrohub.demo.models.Client;
 import br.com.agrohub.demo.models.User;
-import br.com.agrohub.demo.models.ClientAddress; // 🎯 ESSENCIAL: Sua entidade de endereço
-import br.com.agrohub.demo.models.UserType; 
-import br.com.agrohub.demo.models.Pedido; 
-import br.com.agrohub.demo.models.Contact; 
+import br.com.agrohub.demo.models.ClientAddress;
+import br.com.agrohub.demo.models.Pedido;
 import br.com.agrohub.demo.models.ItemPedido; // ESSENCIAL: Para calcular a quantidade no histórico
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,8 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.math.BigDecimal; 
-import java.time.LocalDateTime; 
 
 @Component
 public class ClientMapper {

@@ -10,7 +10,8 @@ import br.com.agrohub.demo.models.Product;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // 1. Busca produtos por nome (para a barra de pesquisa na tela h1.png)
-    // O 'ContainingIgnoreCase' permite buscar parcialmente e sem diferenciar maiúsculas/minúsculas.
+    // O 'ContainingIgnoreCase' permite buscar parcialmente e sem diferenciar
+    // maiúsculas/minúsculas.
     List<Product> findByNomeContainingIgnoreCase(String nome);
 
     // 2. Busca produtos por ID de Categoria (para o filtro de categorias em h1.png)
@@ -20,8 +21,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCompanyId(Long companyId);
 
     // 4. Busca produtos que estão ativos (para o catálogo público)
-    List<Product> findByIsActiveTrue();
+    List<Product> findByActiveTrue();
 
-    // 5. Busca produtos que correspondem a um tipo específico (ex: Orgânico, Artesanal)
-    List<Product> findByProductTypeId(Long productTypeId);
+    // 5. Busca produtos que correspondem a um tipo específico (ex: Orgânico,
+    // Artesanal)
+    // DENTRO DE ProductRepository.java
+    List<Product> findByAdditionalInfoProductTypeId(Long productTypeId);
 }
