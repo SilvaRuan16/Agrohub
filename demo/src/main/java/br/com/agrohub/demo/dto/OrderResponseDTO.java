@@ -2,89 +2,51 @@ package br.com.agrohub.demo.dto;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
+/**
+ * DTO de resposta para o login bem-sucedido.
+ * Contém o ID do pedido, valor final e status.
+ */
 public class OrderResponseDTO implements Serializable {
-
-    private Long idPedido; // O número/ID único do pedido
-    private LocalDateTime dataPedido;
-    private BigDecimal valorTotal; // O valor final do pedido
-    private String statusPedido; // Ex: "Processando Pagamento", "Confirmado"
-    private String formaPagamento; // Nome da forma de pagamento (Ex: "PIX", "Cartão de Crédito")
     
-    // Informações de Acompanhamento
-    private String linkRastreio; // Opcional, link para rastreio da transportadora
-    private String mensagemConfirmacao; // Mensagem amigável para a tela OrderSuccessScreen
+    private Long orderId;
+    private BigDecimal totalAmount;
+    private String status;
 
-    // Construtor padrão
+    // Construtor 1: Construtor padrão (sem argumentos)
     public OrderResponseDTO() {
     }
 
-    // Construtor com todos os campos
-    public OrderResponseDTO(Long idPedido, LocalDateTime dataPedido, BigDecimal valorTotal, String statusPedido, String formaPagamento, String linkRastreio, String mensagemConfirmacao) {
-        this.idPedido = idPedido;
-        this.dataPedido = dataPedido;
-        this.valorTotal = valorTotal;
-        this.statusPedido = statusPedido;
-        this.formaPagamento = formaPagamento;
-        this.linkRastreio = linkRastreio;
-        this.mensagemConfirmacao = mensagemConfirmacao;
+    // CONSTRUTOR 2: Construtor de 3 argumentos (ID, VALOR, STATUS)
+    // Este construtor resolve o erro de compilação no OrderService.
+    public OrderResponseDTO(Long orderId, BigDecimal totalAmount, String status) {
+        this.orderId = orderId;
+        this.totalAmount = totalAmount;
+        this.status = status;
     }
-
+    
     // Getters e Setters
-    public Long getIdPedido() {
-        return idPedido;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public void setIdPedido(Long idPedido) {
-        this.idPedido = idPedido;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
     }
 
-    public LocalDateTime getDataPedido() {
-        return dataPedido;
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setDataPedido(LocalDateTime dataPedido) {
-        this.dataPedido = dataPedido;
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
-    public BigDecimal getValorTotal() {
-        return valorTotal;
+    public String getStatus() {
+        return status;
     }
 
-    public void setValorTotal(BigDecimal valorTotal) {
-        this.valorTotal = valorTotal;
-    }
-
-    public String getStatusPedido() {
-        return statusPedido;
-    }
-
-    public void setStatusPedido(String statusPedido) {
-        this.statusPedido = statusPedido;
-    }
-
-    public String getFormaPagamento() {
-        return formaPagamento;
-    }
-
-    public void setFormaPagamento(String formaPagamento) {
-        this.formaPagamento = formaPagamento;
-    }
-
-    public String getLinkRastreio() {
-        return linkRastreio;
-    }
-
-    public void setLinkRastreio(String linkRastreio) {
-        this.linkRastreio = linkRastreio;
-    }
-
-    public String getMensagemConfirmacao() {
-        return mensagemConfirmacao;
-    }
-
-    public void setMensagemConfirmacao(String mensagemConfirmacao) {
-        this.mensagemConfirmacao = mensagemConfirmacao;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

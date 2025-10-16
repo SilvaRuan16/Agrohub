@@ -1,31 +1,34 @@
 package br.com.agrohub.demo.dto;
 
 import java.io.Serializable;
+// Removendo imports e anotações do Lombok
+// import jakarta.validation.constraints.Email; 
+// import jakarta.validation.constraints.NotBlank;
+// AVISO: Se você remover as anotações @Email e @NotBlank, a validação não funcionará.
 
 public class PasswordResetRequestDTO implements Serializable {
 
-    // 1. Campo de identificação (presente no ForgotPasswordScreen.jsx)
+    // 1. Campo de identificação
     private String email; 
     
-    // 2. O token de segurança enviado ao usuário (para garantir que a requisição é legítima)
-    // No seu frontend, o campo 'Código de Verificação' deve mapear para este campo.
+    // 2. O token de segurança (Código de Verificação)
     private String tokenVerificacao; 
 
-    // 3. A nova senha que o usuário deseja definir
-    private String novaSenha;
+    // 3. A nova senha. (RENOMEADO para newPassword para o AuthService compilar)
+    private String newPassword;
 
     // Construtor padrão
     public PasswordResetRequestDTO() {
     }
 
     // Construtor com todos os campos
-    public PasswordResetRequestDTO(String email, String tokenVerificacao, String novaSenha) {
+    public PasswordResetRequestDTO(String email, String tokenVerificacao, String newPassword) {
         this.email = email;
         this.tokenVerificacao = tokenVerificacao;
-        this.novaSenha = novaSenha;
+        this.newPassword = newPassword;
     }
 
-    // Getters e Setters
+    // Getters e Setters (Gerados manualmente)
     public String getEmail() {
         return email;
     }
@@ -42,11 +45,12 @@ public class PasswordResetRequestDTO implements Serializable {
         this.tokenVerificacao = tokenVerificacao;
     }
 
-    public String getNovaSenha() {
-        return novaSenha;
+    // Método que o AuthService estava esperando
+    public String getNewPassword() {
+        return newPassword;
     }
 
-    public void setNovaSenha(String novaSenha) {
-        this.novaSenha = novaSenha;
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
     }
 }

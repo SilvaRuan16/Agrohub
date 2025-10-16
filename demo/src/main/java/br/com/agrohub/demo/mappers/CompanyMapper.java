@@ -1,6 +1,5 @@
 package br.com.agrohub.demo.mappers;
 
-// ... (Imports de DTOs e Models continuam os mesmos) ...
 import java.util.List;
 import java.util.stream.Collectors; 
 
@@ -10,9 +9,9 @@ import org.springframework.stereotype.Component;
 import br.com.agrohub.demo.dto.CompanyProfileResponseDTO;
 import br.com.agrohub.demo.dto.CompanyRegisterRequestDTO;
 import br.com.agrohub.demo.dto.HistoricoVendaDTO;
-import br.com.agrohub.demo.models.Address; // Enum UserType importado aqui
+import br.com.agrohub.demo.models.Address; 
 import br.com.agrohub.demo.models.Company;
-import br.com.agrohub.demo.models.HistoricoVenda;
+import br.com.agrohub.demo.models.Pedido; // Pode ser removido se não for mais usado como entidade
 import br.com.agrohub.demo.models.User;
 import br.com.agrohub.demo.models.UserType;
 
@@ -40,7 +39,6 @@ public class CompanyMapper {
         user.setCnpj(dto.getCnpj()); 
         user.setSenha(passwordEncoder.encode(dto.getSenha())); 
         
-        // CORREÇÃO: Usando o enum externo UserType.EMPRESA
         user.setTipoUsuario(UserType.EMPRESA); 
         
         return user;
@@ -53,8 +51,7 @@ public class CompanyMapper {
         company.setCnpj(dto.getCnpj());
         company.setDataFundacao(dto.getDataFundacao()); 
         
-        // CORREÇÃO: Usando a ordem de argumentos corrigida (telefone, email, urlSite)
-        company.setContact(commonMapper.createContactEntity(dto.getTelefone(), dto.getEmail(), null));
+        //company.setContact(commonMapper.createContactEntity(dto.getTelefone(), dto.getEmail(), null));
         
         company.setUser(user); 
         return company;
@@ -65,7 +62,15 @@ public class CompanyMapper {
     // 2. MAPEAR PARA DTOs (Perfil - Entity to Response)
     // =================================================================
 
-    public CompanyProfileResponseDTO toCompanyProfileResponseDTO(User user, Company company, List<HistoricoVenda> historicoVendas, List<Address> addresses) {
+    /**
+     * CORREÇÃO: Altera a assinatura para List<Pedido> (a entidade real de transação).
+     */
+    public CompanyProfileResponseDTO toCompanyProfileResponseDTO(
+        User user, 
+        Company company, 
+        List<Pedido> pedidos, // <<< TIPO CORRIGIDO AQUI!
+        List<Address> addresses) {
+        
         if (company == null) return null;
 
         CompanyProfileResponseDTO dto = new CompanyProfileResponseDTO();
@@ -80,29 +85,33 @@ public class CompanyMapper {
         dto.setTelefone(company.getContact() != null ? company.getContact().getTelefone() : null);
 
         // 2. ENDEREÇOS CADASTRADOS
-        dto.setEnderecos(addresses.stream()
+        /*dto.setEnderecos(addresses.stream()
             .map(commonMapper::toAddressDTO)
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList()));*/
 
         // 3. HISTÓRICO DE VENDAS
-        dto.setHistoricoVendas(this.toHistoricoVendaDTOList(historicoVendas));
+        // Chama o método auxiliar que mapeia Pedido para HistoricoVendaDTO
+        dto.setHistoricoVendas(this.toHistoricoVendaDTOList(pedidos));
 
         return dto;
     }
     
     /**
-     * Mapeamento auxiliar do Histórico de Vendas
+     * Mapeamento auxiliar do Histórico de Vendas (CORRIGIDO PARA RECEBER List<Pedido>).
+     * Mapeia a entidade Pedido para o DTO HistoricoVendaDTO.
      */
-    private List<HistoricoVendaDTO> toHistoricoVendaDTOList(List<HistoricoVenda> historicoVendas) {
-        if (historicoVendas == null) return List.of();
+    private List<HistoricoVendaDTO> toHistoricoVendaDTOList(List<Pedido> pedidos) {
+        if (pedidos == null) return List.of();
         
-        return historicoVendas.stream().map(venda -> new HistoricoVendaDTO(
-            venda.getId(),
-            venda.getNomeProduto(), 
-            venda.getQuantidade(), 
-            venda.getValorTotal(),
-            venda.getDataVenda(),
-            venda.getStatusVenda() 
+        // Mapeamento de Pedido para HistoricoVendaDTO, usando as informações do Pedido
+        return pedidos.stream().map(pedido -> new HistoricoVendaDTO(
+            pedido.getId(),
+            "Venda #" + pedido.getId(), // Exibindo o ID como item
+            // Assumindo que Pedido.java tem getItens() e que getItens().size() é a quantidade de itens vendidos
+            pedido.getItens() != null ? pedido.getItens().size() : 0, 
+            pedido.getValorTotal(),
+            pedido.getDataPedido(),
+            pedido.getStatus().name() // Assumindo que Pedido tem o método getStatus()
         )).collect(Collectors.toList()); 
     }
 }

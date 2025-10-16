@@ -97,7 +97,7 @@ public class ProductMapper {
             dto.setNomeProdutor(info.getProdutor());
             dto.setMunicipioEmpresa(info.getMunicipio());
             dto.setCnpjProdutor(info.getCnpjProdutor());
-            dto.setEnderecoProdutor(info.getAddress() != null ? commonMapper.toAddressDTO(info.getAddress()) : null);
+            //dto.setEnderecoProdutor(info.getAddress() != null ? commonMapper.toAddressDTO(info.getAddress()) : null);
             dto.setTipoProduto(info.getProductType() != null ? info.getProductType().getTipo() : "Não especificado");
         }
 

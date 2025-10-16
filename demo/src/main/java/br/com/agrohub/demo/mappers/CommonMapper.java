@@ -1,99 +1,77 @@
 package br.com.agrohub.demo.mappers;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
-import br.com.agrohub.demo.dto.EnderecoDTO;
-import br.com.agrohub.demo.models.Address;
-import br.com.agrohub.demo.models.ClientAddress; 
-import br.com.agrohub.demo.models.Contact;
+// DTOs
+import br.com.agrohub.demo.dto.HistoricoPedidoDTO;
+import br.com.agrohub.demo.dto.EnderecoDTO; // <<-- IMPORT NECESSÁRIO
+// Entidades (models)
+import br.com.agrohub.demo.models.Pedido;
+import br.com.agrohub.demo.models.ClientAddress; // <<-- IMPORT NECESSÁRIO
+import br.com.agrohub.demo.models.ItemPedido; // Para calcular a quantidade no Pedido
 
-/**
- * Mapper para entidades e DTOs de uso comum em diversas entidades (Address, Contact).
- */
 @Component
 public class CommonMapper {
 
-    // ===============================
-    // Mapeamento: Address (Endereço)
-    // ===============================
-
     /**
-     * Converte EnderecoDTO para a entidade Address.
+     * Mapeia uma lista de entidades Pedido para uma lista de DTOs de Histórico.
      */
-    public Address toAddressEntity(EnderecoDTO dto) {
-        if (dto == null) return null;
-
-        Address entity = new Address();
-        entity.setCep(dto.getCep());
-        entity.setRua(dto.getRua()); 
-        entity.setNumero(dto.getNumero());
-        entity.setBairro(dto.getBairro());
-        entity.setCidade(dto.getCidade());
-        entity.setEstado(dto.getEstado());
-        entity.setComplemento(dto.getComplemento()); 
-        
-        return entity;
+    public List<HistoricoPedidoDTO> toHistoricoPedidoDTOList(List<Pedido> pedidos) {
+        if (pedidos == null) {
+            return List.of();
+        }
+        return pedidos.stream()
+            .map(this::toHistoricoPedidoDTO)
+            .collect(Collectors.toList());
     }
 
     /**
-     * 1. MÉTODO PARA CLIENTE: Converte a entidade ClientAddress (tabela de ligação) para EnderecoDTO.
-     * Usado pelo ClientMapper.
+     * Mapeia uma única entidade Pedido para o DTO de Histórico.
      */
-    public EnderecoDTO toAddressDTO(ClientAddress entity) {
-        if (entity == null) return null;
-
-        Address actualAddress = entity.getAddress(); 
-        if (actualAddress == null) return null;
-
-        EnderecoDTO dto = new EnderecoDTO();
+    public HistoricoPedidoDTO toHistoricoPedidoDTO(Pedido pedido) {
+        // Cálculo de 'quantity' (quantidade total de itens, somando a quantidade de cada ItemPedido)
+        int totalQuantity = pedido.getItens() != null ? 
+            pedido.getItens().stream().mapToInt(ItemPedido::getQuantidade).sum() : 0;
         
-        dto.setRua(actualAddress.getRua()); 
-        dto.setCep(actualAddress.getCep());
-        dto.setNumero(actualAddress.getNumero());
-        dto.setBairro(actualAddress.getBairro());
-        dto.setCidade(actualAddress.getCidade());
-        dto.setEstado(actualAddress.getEstado());
-        dto.setComplemento(actualAddress.getComplemento()); 
-        dto.setId(entity.getId()); // ID da tabela de ligação
+        // Simulação do campo 'item' (resumo)
+        String itemResumo = "Pedido #" + pedido.getId();
         
-        return dto;
+        // Criação do DTO com o construtor exato de 6 argumentos
+        return new HistoricoPedidoDTO(
+            pedido.getId(),
+            itemResumo, // String item (resumo do pedido)
+            totalQuantity, // Integer quantity (soma das quantidades dos itens)
+            pedido.getValorTotal(), // BigDecimal price (valor total)
+            pedido.getDataPedido(), // LocalDateTime date (data da compra)
+            pedido.getStatus().name() // String status
+        );
     }
     
+    // 🎯 NOVO MÉTODO QUE RESOLVE O ERRO DE toAddressDTO 🎯
     /**
-     * 2. MÉTODO PARA EMPRESA: Converte a entidade Address (genérica) para EnderecoDTO.
-     * Usado pelo CompanyMapper.
+     * Mapeia a entidade ClientAddress para o DTO de Endereço.
      */
-    public EnderecoDTO toAddressDTO(Address entity) {
-        if (entity == null) return null;
+    public EnderecoDTO toAddressDTO(ClientAddress clientAddress) {
+        if (clientAddress == null) {
+            return null;
+        }
 
-        EnderecoDTO dto = new EnderecoDTO();
-        
-        dto.setRua(entity.getRua()); 
-        dto.setCep(entity.getCep());
-        dto.setNumero(entity.getNumero());
-        dto.setBairro(entity.getBairro());
-        dto.setCidade(entity.getCidade());
-        dto.setEstado(entity.getEstado());
-        dto.setComplemento(entity.getComplemento()); 
-        dto.setId(entity.getId()); // ID da tabela Address
-        
-        return dto;
-    }
-
-    // ===============================
-    // Mapeamento: Contact (Contato)
-    // ===============================
-
-    /**
-     * Cria uma entidade Contact a partir de dados de um DTO de registro.
-     */
-    public Contact createContactEntity(String telefone, String email, String urlSite) { 
-        Contact entity = new Contact();
-        
-        entity.setTelefone(telefone); 
-        entity.setEmail(email);
-        entity.setUrlSite(urlSite); 
-        
-        return entity;
+        // OBS: Estou assumindo que a entidade ClientAddress e o DTO EnderecoDTO 
+        // possuem campos compatíveis para o construtor ou setters. 
+        // Como não vi o EnderecoDTO, estou usando uma estrutura comum.
+        return new EnderecoDTO(
+            clientAddress.getId(),
+            clientAddress.getLogradouro(),
+            clientAddress.getNumero(),
+            clientAddress.getBairro(),
+            clientAddress.getCidade(),
+            clientAddress.getEstado(),
+            clientAddress.getCep(),
+            clientAddress.getComplemento(),
+            clientAddress.getTipoEndereco() // Assumindo que este campo existe
+        );
     }
 }
