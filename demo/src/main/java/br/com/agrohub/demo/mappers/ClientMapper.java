@@ -2,6 +2,7 @@ package br.com.agrohub.demo.mappers;
 
 // DTOs
 import br.com.agrohub.demo.dto.ClientProfileResponseDTO;
+import br.com.agrohub.demo.dto.ClientRegisterRequestDTO; // NOVO: DTO de registro
 import br.com.agrohub.demo.dto.HistoricoPedidoDTO;
 
 // Entidades (models)
@@ -9,7 +10,7 @@ import br.com.agrohub.demo.models.Client;
 import br.com.agrohub.demo.models.User;
 import br.com.agrohub.demo.models.ClientAddress;
 import br.com.agrohub.demo.models.Pedido;
-import br.com.agrohub.demo.models.ItemPedido; // ESSENCIAL: Para calcular a quantidade no histórico
+import br.com.agrohub.demo.models.ItemPedido; 
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -29,9 +30,33 @@ public class ClientMapper {
     }
 
     // =================================================================
+    // 1. MAPEAR PARA ENTIDADE (Registro - Request to Entity)
+    // =================================================================
+
+    /**
+     * NOVO MÉTODO: Mapeia ClientRegisterRequestDTO para a Entidade Client.
+     * ATENÇÃO: Campos de User (email, cpf, senha) são mapeados no AuthSecurity/ClientService.
+     * ATENÇÃO: Campos de Address/Contact precisam de mappers/lógica adicionais no Service.
+     */
+    public Client toClient(ClientRegisterRequestDTO dto) {
+        Client client = new Client();
+        
+        client.setNomeCompleto(dto.getNomeCompleto());
+        client.setRg(dto.getRg());
+        client.setDataNascimento(dto.getDataNascimento());
+        client.setRedeSocial(dto.getRedeSocial());
+        client.setWebsite(dto.getWebsite());
+        // Obs: O ID do User será setado no ClientService.java
+        
+        return client;
+    }
+
+
+    // =================================================================
     // 2. MAPEAR PARA DTO (Perfil - Entity to Response)
     // =================================================================
 
+    // ... (O restante do seu código toClientProfileDTO e toHistoricoPedidoDTOList continua igual) ...
     /**
      * Mapeia Client, Pedidos e Endereços para o DTO de Perfil.
      * Assinatura Correta: List<ClientAddress> addresses

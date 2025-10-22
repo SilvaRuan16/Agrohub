@@ -1,161 +1,367 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid, IconButton } from '@mui/material';
+import { Box, Typography, TextField, Button, Grid, IconButton, Alert, Paper } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import styled from 'styled-components';
 import InputMask from 'react-input-mask';
 
-// --- Styled Components (Reutilizados) ---
+// --- Styled Components (Estilos de Layout/Cores) ---
+
+// Cor principal da marca
+const PRIMARY_COLOR = '#1a4314'; // Verde Escuro
+const LIGHT_COLOR = '#c8e6c9'; // Verde Claro
+
 const RegisterContainer = styled(Box)`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #f0f4f7; /* Fundo mais suave */
 `;
 
 const Header = styled(Box)`
-  background-color: #1a4314;
+  background-color: ${PRIMARY_COLOR};
   color: white;
   padding: 15px 30px;
   display: flex;
   align-items: center;
 `;
 
-const FormContainer = styled(Box)`
-  flex-grow: 1;
+const FormWrapper = styled(Paper)`
+  /* Cria o 'card' do formulário */
+  margin: 30px auto;
   padding: 40px;
+  width: 100%;
+  max-width: 1200px; /* Limita a largura do formulário em telas grandes */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   
-  @media (max-width: 600px) {
+  @media (max-width: 900px) {
+    margin: 20px;
     padding: 20px;
   }
 `;
 
 const Footer = styled(Box)`
-  background-color: #1a4314;
-  color: #c8e6c9;
+  background-color: ${PRIMARY_COLOR};
+  color: ${LIGHT_COLOR};
   padding: 20px 40px;
   font-size: 0.75rem;
   text-align: center;
+  margin-top: auto; /* Garante que o footer fique no final */
 `;
+
+// --- Componente de Input Mascarado Reutilizável ---
+const MaskedInput = (props) => {
+    // eslint-disable-next-line no-unused-vars
+    const { inputRef, ...other } = props; 
+    return <InputMask {...other} />;
+};
+
 
 // --- Componente Principal ---
 
 export default function RegisterClientScreen() {
-  const navigate = useNavigate();
-  // Estado inicial simulando os campos da imagem
-  const [formData, setFormData] = useState({
-    nomeCompleto: '', cpf: '', rg: '', cnpjCompra: '',
-    email: '', senha: '', dataNascimento: '', telefone: '',
-    redeSocial: '', website: '', rua: '', numero: '',
-    bairro: '', cidade: '', estado: '', cep: '',
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleRegister = (e) => {
-    e.preventDefault();
-    console.log('Dados do Cliente para API:', formData);
-    // TODO: Implementar envio POST para a API Spring Boot aqui
-    alert('Cadastro de Cliente em andamento! Verifique o console.');
-    // navigate('/login-success'); // Opcional: Redirecionar após sucesso
-  };
-  
-  const handleClear = () => {
-    setFormData({
-        nomeCompleto: '', cpf: '', rg: '', cnpjCompra: '',
-        email: '', senha: '', dataNascimento: '', telefone: '',
-        redeSocial: '', website: '', rua: '', numero: '',
-        bairro: '', cidade: '', estado: '', cep: '',
+    const navigate = useNavigate();
+    
+    const API_URL = 'http://localhost:8080/api/v1/clients/register'; 
+    
+    const [formData, setFormData] = useState({
+      nomeCompleto: '', cpf: '', rg: '', cnpj: '', 
+      email: '', senha: '', dataNascimento: '', telefone: '',
+      redeSocial: '', website: '', 
+      rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '',
     });
-  };
+    
+    const [status, setStatus] = useState({ type: '', message: '' });
+    const [selectedFile, setSelectedFile] = useState(null); 
 
-  return (
-    <RegisterContainer>
-      <Header>
-        <IconButton onClick={() => navigate('/register')} style={{ color: 'white', marginRight: '10px' }}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant="h6">
-          Registrar Clientes
-        </Typography>
-      </Header>
-
-      <FormContainer component="form" onSubmit={handleRegister}>
-        <Grid container spacing={3}>
-          {/* Coluna 1: Dados Pessoais */}
-          <Grid item xs={12} sm={6}>
-            <TextField label="Nome Completo" name="nomeCompleto" value={formData.nomeCompleto} onChange={handleChange} fullWidth margin="normal" required />
-            
-            {/* CNPJ para quem compra como empresa (Opcional) */}
-            <InputMask mask="99.999.999/9999-99" value={formData.cnpjCompra} onChange={handleChange} name="cnpjCompra">
-              {(inputProps) => <TextField {...inputProps} label="CNPJ (Caso queira comprar como empresa)" fullWidth margin="normal" />}
-            </InputMask>
-            
-            <TextField label="E-mail" name="email" value={formData.email} onChange={handleChange} fullWidth margin="normal" required type="email" />
-            <TextField label="Data de nascimento" name="dataNascimento" value={formData.dataNascimento} onChange={handleChange} fullWidth margin="normal" />
-            <TextField label="Rede Social (Opcional)" name="redeSocial" value={formData.redeSocial} onChange={handleChange} fullWidth margin="normal" />
-            <TextField label="Rua" name="rua" value={formData.rua} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Bairro" name="bairro" value={formData.bairro} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Estado" name="estado" value={formData.estado} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Cep" name="cep" value={formData.cep} onChange={handleChange} fullWidth margin="normal" required />
-          </Grid>
-
-          {/* Coluna 2: Documentos e Endereço */}
-          <Grid item xs={12} sm={6}>
-            {/* CPF com Máscara */}
-            <InputMask mask="999.999.999-99" value={formData.cpf} onChange={handleChange} name="cpf">
-              {(inputProps) => <TextField {...inputProps} label="CPF" fullWidth margin="normal" required />}
-            </InputMask>
-            
-            <TextField label="RG" name="rg" value={formData.rg} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Senha" name="senha" value={formData.senha} onChange={handleChange} fullWidth margin="normal" required type="password" />
-            <TextField label="Telefone" name="telefone" value={formData.telefone} onChange={handleChange} fullWidth margin="normal" required />
-            
-            <Box display="flex" alignItems="center" my={2}>
-                <Button variant="outlined" component="label">
-                    Escolher Arquivo
-                    <input type="file" hidden onChange={handleChange} name="imagem" />
-                </Button>
-                <Button variant="outlined" style={{ marginLeft: '10px' }}>Visualizar imagem</Button>
-            </Box>
-            
-            <TextField label="Url site (Opcional)" name="website" value={formData.website} onChange={handleChange} fullWidth margin="normal" />
-            <TextField label="Número" name="numero" value={formData.numero} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} fullWidth margin="normal" required />
-          </Grid>
-        </Grid>
-
-        {/* Botões de Ação */}
-        <Box display="flex" justifyContent="flex-start" gap={2} mt={4}>
-          <Button variant="contained" style={{ backgroundColor: '#e57373', color: 'white' }} onClick={() => navigate('/register')}>
-            Cancelar e voltar
-          </Button>
-          <Button variant="contained" style={{ backgroundColor: '#ffb74d', color: 'white' }} onClick={handleClear}>
-            Limpar Campos
-          </Button>
-          <Button type="submit" variant="contained" style={{ backgroundColor: '#1a4314', color: 'white' }}>
-            Salvar
-          </Button>
-        </Box>
-        
-        {/* Rodapé interno com texto do projeto */}
-        <Box mt={4} py={3} sx={{ fontSize: '0.75rem', color: '#555', borderTop: '1px solid #eee' }}>
-            <Typography variant="caption" display="block">
-                &copy; AgroHub - Projeto Acadêmico
-            </Typography>
-            <Typography variant="caption" display="block">
-                Este é um protótipo acadêmico desenvolvido por quatro estudantes com o objetivo de propor soluções inovadoras para o setor agroalimentar. O AgroHub é uma plataforma em fase de desenvolvimento voltada à criação de um marketplace exclusivo para empresas internas dos centros de abastecimento, facilitando a comercialização de produtos de forma eficiente, segura e integrada. Todos os conteúdos, funcionalidades e propostas aqui apresentados têm **caráter educacional e experimental**, não representando ainda uma operação comercial oficial. Agradecemos o interesse e apoio à nossa iniciativa!
-            </Typography>
-        </Box>
-      </FormContainer>
+    const handleChange = (e) => {
+      const { name, value, files } = e.target;
       
-      {/* Rodapé externo (opcional) */}
-      <Footer>
-        copyright AgroHub - 2025
-      </Footer>
-    </RegisterContainer>
-  );
+      if (name === 'imagem' && files && files.length > 0) {
+        setSelectedFile(files[0]);
+      } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+      setStatus({ type: '', message: '' }); 
+    };
+
+    const handleRegister = async (e) => {
+      e.preventDefault();
+      setStatus({ type: 'info', message: 'Tentando cadastrar cliente...' });
+      
+      const clientData = {
+        nomeCompleto: formData.nomeCompleto, 
+        email: formData.email,
+        senha: formData.senha, 
+        dataNascimento: formData.dataNascimento, 
+        redeSocial: formData.redeSocial,
+        website: formData.website,
+        
+        cpf: formData.cpf.replace(/[^0-9]/g, ''), 
+        rg: formData.rg.replace(/[^0-9]/g, ''), 
+        cnpj: formData.cnpj.replace(/[^0-9]/g, ''), 
+        
+        telefone: formData.telefone.replace(/[^0-9]/g, ''), 
+        
+        endereco: { 
+          rua: formData.rua,
+          numero: formData.numero,
+          bairro: formData.bairro,
+          cidade: formData.cidade,
+          estado: formData.estado,
+          cep: formData.cep.replace(/[^0-9]/g, ''), 
+          complemento: formData.complemento, 
+        }
+      };
+      
+      console.log('Payload final enviado para a API:', clientData);
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(clientData),
+        });
+
+        if (response.ok) {
+          console.log('✅ Cadastro realizado com sucesso!');
+          setStatus({ type: 'success', message: 'Cadastro realizado com sucesso! Redirecionando...' });
+          setTimeout(() => navigate('/login'), 2000); 
+        } else {
+          const errorText = await response.text();
+          let errorMessage = `Erro ${response.status}: ${errorText.substring(0, 100)}...`;
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = `Erro (${response.status}): ${errorData.message || 'Erro desconhecido.'}`;
+          } catch (e) { /* Não é JSON */ }
+          
+          console.error('❌ Falha na Requisição (Status:', response.status, ') Resposta Bruta:', errorText);
+          setStatus({ 
+            type: 'error', 
+            message: `Falha: ${errorMessage}. Verifique o console para detalhes.`
+          });
+        }
+      } catch (error) {
+        console.error('❌ Erro de Rede ou CORS:', error);
+        setStatus({ type: 'error', message: 'Erro de comunicação. Verifique se o Back-end está rodando e se o CORS está configurado.' });
+      }
+    };
+    
+    const handleClear = () => {
+      setFormData({
+          nomeCompleto: '', cpf: '', rg: '', cnpj: '',
+          email: '', senha: '', dataNascimento: '', telefone: '',
+          redeSocial: '', website: '', rua: '', numero: '',
+          bairro: '', cidade: '', estado: '', cep: '', complemento: '',
+      });
+      setSelectedFile(null); 
+      setStatus({ type: '', message: '' });
+    };
+
+    return (
+      <RegisterContainer>
+        {/* CABEÇALHO */}
+        <Header>
+          <IconButton onClick={() => navigate('/register')} style={{ color: 'white', marginRight: '10px' }}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h6">
+            Registrar Cliente <span style={{fontSize: '0.8em', opacity: 0.8}}>- Dados Completo</span>
+          </Typography>
+        </Header>
+
+        {/* CONTEÚDO PRINCIPAL (FORMULÁRIO) */}
+        <FormWrapper component="form" onSubmit={handleRegister}>
+          <Typography variant="h5" component="h1" gutterBottom align="center" color={PRIMARY_COLOR}>
+            Dados de Cadastro
+          </Typography>
+          
+          {/* Area de Status/Feedback */}
+          {status.message && (
+            <Box mb={3}>
+              <Alert severity={status.type} variant="outlined">{status.message}</Alert>
+            </Box>
+          )}
+          
+          <Grid container spacing={4}> {/* Aumentei o espaçamento entre as linhas/colunas */}
+            {/* ------------------- Seção de Dados Pessoais / Documentos ------------------- */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, borderBottom: `2px solid ${PRIMARY_COLOR}`, color: PRIMARY_COLOR }}>
+                1. Informações Pessoais e de Login
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="Nome Completo" name="nomeCompleto" value={formData.nomeCompleto} onChange={handleChange} fullWidth required />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="E-mail" name="email" value={formData.email} onChange={handleChange} fullWidth required type="email" />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="Senha" name="senha" value={formData.senha} onChange={handleChange} fullWidth required type="password" />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField 
+                label="Data de Nascimento (AAAA-MM-DD)" 
+                name="dataNascimento" 
+                value={formData.dataNascimento} 
+                onChange={handleChange} 
+                fullWidth 
+                placeholder="Ex: 1990-12-31"
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              {/* CPF com Máscara */}
+              <TextField 
+                label="CPF" 
+                name="cpf"
+                value={formData.cpf} 
+                onChange={handleChange} 
+                fullWidth 
+                required
+                InputProps={{
+                  inputComponent: MaskedInput,
+                  inputProps: { mask: "999.999.999-99", name: "cpf" }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="RG" name="rg" value={formData.rg} onChange={handleChange} fullWidth required />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              {/* CNPJ com Máscara */}
+              <TextField 
+                label="CNPJ (Opcional)" 
+                name="cnpj" 
+                value={formData.cnpj}
+                onChange={handleChange}
+                fullWidth 
+                InputProps={{
+                  inputComponent: MaskedInput,
+                  inputProps: { mask: "99.999.999/9999-99", name: "cnpj" }
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              {/* Telefone com Máscara */}
+              <TextField 
+                label="Telefone" 
+                name="telefone"
+                value={formData.telefone} 
+                onChange={handleChange} 
+                fullWidth 
+                required
+                InputProps={{
+                  inputComponent: MaskedInput,
+                  inputProps: { mask: "(99) 99999-9999", name: "telefone" }
+                }}
+              />
+            </Grid>
+
+            {/* ------------------- Seção de Endereço ------------------- */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, borderBottom: `2px solid ${PRIMARY_COLOR}`, color: PRIMARY_COLOR }}>
+                2. Endereço
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              {/* CEP com Máscara */}
+              <TextField 
+                label="CEP" 
+                name="cep"
+                value={formData.cep} 
+                onChange={handleChange} 
+                fullWidth 
+                required
+                InputProps={{
+                  inputComponent: MaskedInput,
+                  inputProps: { mask: "99999-999", name: "cep" }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={8}>
+              <TextField label="Rua" name="rua" value={formData.rua} onChange={handleChange} fullWidth required />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField label="Número" name="numero" value={formData.numero} onChange={handleChange} fullWidth required />
+            </Grid>
+            <Grid item xs={12} sm={8}>
+              <TextField label="Complemento (Ex: Apto 101)" name="complemento" value={formData.complemento} onChange={handleChange} fullWidth />
+            </Grid>
+            
+            <Grid item xs={12} sm={4}>
+              <TextField label="Bairro" name="bairro" value={formData.bairro} onChange={handleChange} fullWidth required />
+            </Grid>
+            <Grid item xs={12} sm={5}>
+              <TextField label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} fullWidth required />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField label="Estado (Ex: SP)" name="estado" value={formData.estado} onChange={handleChange} fullWidth required inputProps={{ maxLength: 2 }} />
+            </Grid>
+
+
+            {/* ------------------- Seção de Informações Adicionais ------------------- */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, borderBottom: `2px solid ${PRIMARY_COLOR}`, color: PRIMARY_COLOR }}>
+                3. Opcionais
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="Rede Social (Opcional)" name="redeSocial" value={formData.redeSocial} onChange={handleChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="Website (Opcional)" name="website" value={formData.website} onChange={handleChange} fullWidth />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box display="flex" alignItems="center" my={1}>
+                <Button variant="outlined" component="label" sx={{ mr: 2, color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR, '&:hover': { borderColor: PRIMARY_COLOR, backgroundColor: 'rgba(26, 67, 20, 0.04)' } }}>
+                  Escolher Imagem de Perfil
+                  <input type="file" hidden onChange={handleChange} name="imagem" accept="image/*" />
+                </Button>
+                <Typography variant="body2" color="textSecondary">
+                  {selectedFile ? `Arquivo Selecionado: ${selectedFile.name}` : 'Nenhuma imagem selecionada.'}
+                </Typography>
+              </Box>
+            </Grid>
+
+          </Grid>
+
+          {/* Botões de Ação */}
+          <Box display="flex" justifyContent="flex-start" gap={2} mt={4} flexWrap="wrap">
+            <Button variant="outlined" color="error" onClick={() => navigate('/register')}>
+              Cancelar e Voltar
+            </Button>
+            <Button variant="outlined" color="warning" onClick={handleClear}>
+              Limpar Campos
+            </Button>
+            <Button type="submit" variant="contained" sx={{ backgroundColor: PRIMARY_COLOR, color: 'white', '&:hover': { backgroundColor: '#38761d' } }}>
+              Salvar Cadastro
+            </Button>
+          </Box>
+          
+          {/* Rodapé interno com texto do projeto */}
+          <Box mt={6} py={3} sx={{ fontSize: '0.75rem', color: '#555', borderTop: '1px solid #eee' }}>
+            <Typography variant="caption" display="block">
+              &copy; AgroHub - Projeto Acadêmico 2025
+            </Typography>
+            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+              Este é um protótipo acadêmico... [texto completo da descrição do projeto].
+            </Typography>
+          </Box>
+        </FormWrapper>
+        
+        {/* RODAPÉ EXTERNO */}
+        <Footer>
+          copyright AgroHub - 2025
+        </Footer>
+      </RegisterContainer>
+    );
 }

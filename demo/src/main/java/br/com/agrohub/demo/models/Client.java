@@ -51,19 +51,24 @@ public class Client {
 
     @Column(name = "foto_perfil", length = 255)
     private String fotoPerfil;
+    
+    // ⭐ CAMPOS ADICIONADOS PARA COMPATIBILIDADE COM DTO/MAPPER ⭐
+    @Column(name = "rede_social", length = 100)
+    private String redeSocial; 
+
+    @Column(name = "website", length = 100)
+    private String website;
+    // -------------------------------------------------------------
 
     // Relacionamento One-to-One com Contato
     @OneToOne
     @JoinColumn(name = "contato_id", nullable = false)
     private Contact contact;
 
-    // 🎯 CORREÇÃO 1: Renomeando para 'enderecos' para gerar getEnderecos()
     // Relacionamento One-to-Many com Endereços
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
-    // Assumindo que a entidade de endereço se chama ClientAddress
     private List<ClientAddress> enderecos; // Lombok gera getEnderecos()
 
-    // 🎯 CORREÇÃO 2: ADICIONANDO RELACIONAMENTO COM PEDIDOS
     // Relacionamento One-to-Many com Pedidos
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Pedido> pedidos; // Lombok gera getPedidos()
