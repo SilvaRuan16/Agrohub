@@ -1,372 +1,305 @@
-// RegisterClientScreen.js (CORRIGIDO)
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid, IconButton, Alert, Paper } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
-import styled from 'styled-components';
 import InputMask from 'react-input-mask';
 
-// --- Styled Components (Estilos de Layout/Cores) ---
+import { ArrowBack } from '@mui/icons-material';
 
-// Cor principal da marca
+// --- Constantes de Estilo ---
 const PRIMARY_COLOR = '#1a4314'; // Verde Escuro
-const LIGHT_COLOR = '#c8e6c9'; // Verde Claro
-
-const RegisterContainer = styled(Box)`
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #f0f4f7; /* Fundo mais suave */
-`;
-
-const Header = styled(Box)`
-  background-color: ${PRIMARY_COLOR};
-  color: white;
-  padding: 15px 30px;
-  display: flex;
-  align-items: center;
-`;
-
-const FormWrapper = styled(Paper)`
-  /* Cria o 'card' do formulário */
-  margin: 30px auto;
-  padding: 40px;
-  width: 100%;
-  max-width: 1200px; /* Limita a largura do formulário em telas grandes */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  
-  @media (max-width: 900px) {
-    margin: 20px;
-    padding: 20px;
-  }
-`;
-
-const Footer = styled(Box)`
-  background-color: ${PRIMARY_COLOR};
-  color: ${LIGHT_COLOR};
-  padding: 20px 40px;
-  font-size: 0.75rem;
-  text-align: center;
-  margin-top: auto; /* Garante que o footer fique no final */
-`;
+const LIGHT_COLOR = '#c8e6c9'; // Verde Claro (Texto do Footer)
+const WARNING_COLOR = '#f97316'; // Laranja (Botão Limpar Campos)
+const ERROR_COLOR = '#ef4444'; // Vermelho (Botão Cancelar)
 
 // --- Componente de Input Mascarado Reutilizável ---
-const MaskedInput = (props) => {
-    // eslint-disable-next-line no-unused-vars
-    const { inputRef, ...other } = props; 
-    return <InputMask {...other} />;
-};
+const MaskedInput = React.forwardRef((props, ref) => {
+    return (
+        <InputMask 
+            {...props} 
+            ref={ref}
+            maskChar={null}
+            // Estilo simples de input para formulário centralizado
+            className="w-full px-4 py-2 border border-gray-400 rounded-sm focus:outline-none focus:ring-1 focus:ring-green-700 shadow-sm"
+        />
+    );
+});
 
 
 // --- Componente Principal ---
 
 export default function RegisterClientScreen() {
-    const navigate = useNavigate();
-    
-    const API_URL = 'http://localhost:8080/api/v1/clients/register'; 
-    
-    const [formData, setFormData] = useState({
-      nomeCompleto: '', cpf: '', rg: '', cnpj: '', 
-      email: '', senha: '', dataNascimento: '', telefone: '',
-      redeSocial: '', website: '', 
-      rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '',
-    });
-    
-    const [status, setStatus] = useState({ type: '', message: '' });
-    const [selectedFile, setSelectedFile] = useState(null); 
+    const navigate = useNavigate();
+    const API_URL = 'http://localhost:8080/api/v1/clients/register'; 
+    
+    const [formData, setFormData] = useState({
+        nomeCompleto: '', cpf: '', rg: '', cnpj: '', 
+        email: '', senha: '', dataNascimento: '', telefone: '',
+        redeSocial: '', website: '', 
+        rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '',
+    });
+    
+    const [status, setStatus] = useState({ type: '', message: '' });
+    const [selectedFile, setSelectedFile] = useState(null); 
 
-    const handleChange = (e) => {
-      const { name, value, files } = e.target;
-      
-      if (name === 'imagem' && files && files.length > 0) {
-        setSelectedFile(files[0]);
-      } else {
-        setFormData(prev => ({ ...prev, [name]: value }));
-      }
-      setStatus({ type: '', message: '' }); 
-    };
+    // ... [Funções handleChange, handleClear e handleRegister permanecem as mesmas] ...
+    const handleChange = (e) => {
+        const { name, value, files } = e.target;
+        
+        if (name === 'imagem' && files && files.length > 0) {
+            setSelectedFile(files[0]);
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+        setStatus({ type: '', message: '' }); 
+    };
+    
+    const handleClear = () => {
+        setFormData({
+            nomeCompleto: '', cpf: '', rg: '', cnpj: '',
+            email: '', senha: '', dataNascimento: '', telefone: '',
+            redeSocial: '', website: '', rua: '', numero: '',
+            bairro: '', cidade: '', estado: '', cep: '', complemento: '',
+        });
+        setSelectedFile(null); 
+        setStatus({ type: '', message: '' });
+    };
 
-    const handleRegister = async (e) => {
-      e.preventDefault();
-      setStatus({ type: 'info', message: 'Tentando cadastrar cliente...' });
-      
-      const clientData = {
-        nomeCompleto: formData.nomeCompleto, 
-        senha: formData.senha, 
-        dataNascimento: formData.dataNascimento, 
-        
-        cpf: formData.cpf.replace(/[^0-9]/g, ''), 
-        rg: formData.rg.replace(/[^0-9]/g, ''), 
-        cnpj: formData.cnpj.replace(/[^0-9]/g, ''), 
-        
-        // ⭐ CORREÇÃO: ENVIANDO O OBJETO 'contact' ANINHADO PARA O BACK-END
-        contact: { 
-          email: formData.email, // Movemos para dentro de contact
-          telefone: formData.telefone.replace(/[^0-9]/g, ''), // Movemos para dentro de contact
-          redeSocial: formData.redeSocial,
-          website: formData.website,
-        },
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setStatus({ type: 'info', message: 'Tentando cadastrar cliente...' });
+        
+        const clientData = {
+            nomeCompleto: formData.nomeCompleto, 
+            senha: formData.senha, 
+            dataNascimento: formData.dataNascimento, 
+            
+            cpf: formData.cpf.replace(/[^0-9]/g, ''), 
+            rg: formData.rg.replace(/[^0-9]/g, ''), 
+            cnpj: formData.cnpj.replace(/[^0-9]/g, ''), 
+            
+            contact: { 
+                email: formData.email,
+                telefone: formData.telefone.replace(/[^0-9]/g, ''),
+                redeSocial: formData.redeSocial,
+                website: formData.website,
+            },
 
-        endereco: { 
-          rua: formData.rua,
-          numero: formData.numero,
-          bairro: formData.bairro,
-          cidade: formData.cidade,
-          estado: formData.estado,
-          cep: formData.cep.replace(/[^0-9]/g, ''), 
-          complemento: formData.complemento, 
-        }
-      };
-      
-      console.log('Payload final enviado para a API:', clientData);
+            endereco: { 
+                rua: formData.rua,
+                numero: formData.numero,
+                bairro: formData.bairro,
+                cidade: formData.cidade,
+                estado: formData.estado,
+                cep: formData.cep.replace(/[^0-9]/g, ''), 
+                complemento: formData.complemento, 
+            }
+        };
+        
+        console.log('Payload final enviado para a API:', clientData);
 
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(clientData),
-        });
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(clientData),
+            });
 
-        if (response.ok) {
-          console.log('✅ Cadastro realizado com sucesso!');
-          setStatus({ type: 'success', message: 'Cadastro realizado com sucesso! Redirecionando...' });
-          setTimeout(() => navigate('/login'), 2000); 
-        } else {
-          const errorText = await response.text();
-          let errorMessage = `Erro ${response.status}: ${errorText.substring(0, 100)}...`;
-          
-          try {
-            const errorData = JSON.parse(errorText);
-            errorMessage = `Erro (${response.status}): ${errorData.message || 'Erro desconhecido.'}`;
-          } catch (e) { /* Não é JSON */ }
-          
-          console.error('❌ Falha na Requisição (Status:', response.status, ') Resposta Bruta:', errorText);
-          setStatus({ 
-            type: 'error', 
-            message: `Falha: ${errorMessage}. Verifique o console para detalhes.`
-          });
-        }
-      } catch (error) {
-        console.error('❌ Erro de Rede ou CORS:', error);
-        setStatus({ type: 'error', message: 'Erro de comunicação. Verifique se o Back-end está rodando e se o CORS está configurado.' });
-      }
-    };
-    
-    const handleClear = () => {
-      setFormData({
-          nomeCompleto: '', cpf: '', rg: '', cnpj: '',
-          email: '', senha: '', dataNascimento: '', telefone: '',
-          redeSocial: '', website: '', rua: '', numero: '',
-          bairro: '', cidade: '', estado: '', cep: '', complemento: '',
-      });
-      setSelectedFile(null); 
-      setStatus({ type: '', message: '' });
-    };
-
-    return (
-      <RegisterContainer>
-        {/* CABEÇALHO */}
-        <Header>
-          <IconButton onClick={() => navigate('/register')} style={{ color: 'white', marginRight: '10px' }}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h6">
-            Registrar Cliente <span style={{fontSize: '0.8em', opacity: 0.8}}>- Dados Completo</span>
-          </Typography>
-        </Header>
-
-        {/* CONTEÚDO PRINCIPAL (FORMULÁRIO) */}
-        <FormWrapper component="form" onSubmit={handleRegister}>
-          <Typography variant="h5" component="h1" gutterBottom align="center" color={PRIMARY_COLOR}>
-            Dados de Cadastro
-          </Typography>
-          
-          {/* Area de Status/Feedback */}
-          {status.message && (
-            <Box mb={3}>
-              <Alert severity={status.type} variant="outlined">{status.message}</Alert>
-            </Box>
-          )}
-          
-          <Grid container spacing={4}> {/* Aumentei o espaçamento entre as linhas/colunas */}
-            {/* ------------------- Seção de Dados Pessoais / Documentos ------------------- */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, borderBottom: `2px solid ${PRIMARY_COLOR}`, color: PRIMARY_COLOR }}>
-                1. Informações Pessoais e de Login
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nome Completo" name="nomeCompleto" value={formData.nomeCompleto} onChange={handleChange} fullWidth required />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="E-mail" name="email" value={formData.email} onChange={handleChange} fullWidth required type="email" />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Senha" name="senha" value={formData.senha} onChange={handleChange} fullWidth required type="password" />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField 
-                label="Data de Nascimento (AAAA-MM-DD)" 
-                name="dataNascimento" 
-                value={formData.dataNascimento} 
-                onChange={handleChange} 
-                fullWidth 
-                placeholder="Ex: 1990-12-31"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              {/* CPF com Máscara */}
-              <TextField 
-                label="CPF" 
-                name="cpf"
-                value={formData.cpf} 
-                onChange={handleChange} 
-                fullWidth 
-                required
-                InputProps={{
-                  inputComponent: MaskedInput,
-                  inputProps: { mask: "999.999.999-99", name: "cpf" }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="RG" name="rg" value={formData.rg} onChange={handleChange} fullWidth required />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              {/* CNPJ com Máscara */}
-              <TextField 
-                label="CNPJ (Opcional)" 
-                name="cnpj" 
-                value={formData.cnpj}
-                onChange={handleChange}
-                fullWidth 
-                InputProps={{
-                  inputComponent: MaskedInput,
-                  inputProps: { mask: "99.999.999/9999-99", name: "cnpj" }
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              {/* Telefone com Máscara */}
-              <TextField 
-                label="Telefone" 
-                name="telefone"
-                value={formData.telefone} 
-                onChange={handleChange} 
-                fullWidth 
-                required
-                InputProps={{
-                  inputComponent: MaskedInput,
-                  inputProps: { mask: "(99) 99999-9999", name: "telefone" }
-                }}
-              />
-            </Grid>
-
-            {/* ------------------- Seção de Endereço ------------------- */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, borderBottom: `2px solid ${PRIMARY_COLOR}`, color: PRIMARY_COLOR }}>
-                2. Endereço
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              {/* CEP com Máscara */}
-              <TextField 
-                label="CEP" 
-                name="cep"
-                value={formData.cep} 
-                onChange={handleChange} 
-                fullWidth 
-                required
-                InputProps={{
-                  inputComponent: MaskedInput,
-                  inputProps: { mask: "99999-999", name: "cep" }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={8}>
-              <TextField label="Rua" name="rua" value={formData.rua} onChange={handleChange} fullWidth required />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField label="Número" name="numero" value={formData.numero} onChange={handleChange} fullWidth required />
-            </Grid>
-            <Grid item xs={12} sm={8}>
-              <TextField label="Complemento (Ex: Apto 101)" name="complemento" value={formData.complemento} onChange={handleChange} fullWidth />
-            </Grid>
-            
-            <Grid item xs={12} sm={4}>
-              <TextField label="Bairro" name="bairro" value={formData.bairro} onChange={handleChange} fullWidth required />
-            </Grid>
-            <Grid item xs={12} sm={5}>
-              <TextField label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} fullWidth required />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField label="Estado (Ex: SP)" name="estado" value={formData.estado} onChange={handleChange} fullWidth required inputProps={{ maxLength: 2 }} />
-            </Grid>
+            if (response.ok) {
+                console.log('✅ Cadastro realizado com sucesso!');
+                setStatus({ type: 'success', message: 'Cadastro realizado com sucesso! Redirecionando...' });
+                setTimeout(() => navigate('/'), 2000); 
+            } else {
+                const errorText = await response.text();
+                let errorMessage = `Erro ${response.status}: ${errorText.substring(0, 100)}...`;
+                
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = `Erro (${response.status}): ${errorData.message || 'Erro desconhecido.'}`;
+                } catch (e) { /* Não é JSON */ }
+                
+                console.error('❌ Falha na Requisição (Status:', response.status, ') Resposta Bruta:', errorText);
+                setStatus({ type: 'error', message: `Falha: ${errorMessage}. Verifique o console para detalhes.` });
+            }
+        } catch (error) {
+            console.error('❌ Erro de Rede ou CORS:', error);
+            setStatus({ type: 'error', message: 'Erro de comunicação. Verifique se o Back-end está rodando e se o CORS está configurado.' });
+        }
+    };
+    
+    // Função auxiliar para renderizar um input padrão
+    // Todos os campos agora ocupam a largura total do container do formulário
+    const renderInputWithLabel = (label, name, value, type = 'text', required = false, maxLength = null) => (
+        <div className="flex flex-col space-y-1 w-full">
+            <label htmlFor={name} className="text-sm font-medium text-gray-800">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+            </label>
+            <input
+                id={name}
+                name={name}
+                type={type}
+                value={value}
+                onChange={handleChange}
+                required={required}
+                maxLength={maxLength}
+                placeholder={label}
+                className="w-full px-4 py-2 border border-gray-400 rounded-sm focus:outline-none focus:ring-1 focus:ring-green-700 transition duration-150 shadow-sm"
+            />
+        </div>
+    );
+    
+    // Função auxiliar para input mascarado
+    const renderMaskedField = (label, name, value, mask, required = false) => (
+        <div className="flex flex-col space-y-1 w-full">
+            <label htmlFor={name} className="text-sm font-medium text-gray-800">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+            </label>
+            <MaskedInput 
+                mask={mask} 
+                name={name}
+                value={value}
+                onChange={handleChange}
+                required={required}
+                placeholder={label} 
+            />
+        </div>
+    );
 
 
-            {/* ------------------- Seção de Informações Adicionais ------------------- */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, borderBottom: `2px solid ${PRIMARY_COLOR}`, color: PRIMARY_COLOR }}>
-                3. Opcionais
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Rede Social (Opcional)" name="redeSocial" value={formData.redeSocial} onChange={handleChange} fullWidth />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Website (Opcional)" name="website" value={formData.website} onChange={handleChange} fullWidth />
-            </Grid>
+    return (
+        <div className="min-h-screen flex flex-col bg-gray-100">
+            
+            {/* CABEÇALHO (Menu Verde Escuro) */}
+            <header style={{ backgroundColor: PRIMARY_COLOR }} className="text-white p-4 sm:p-5 flex items-center shadow-lg w-full">
+                <button onClick={() => navigate('/register')} className="text-white mr-4 p-1 rounded-full hover:bg-green-700 transition duration-150">
+                    <ArrowBack fontSize="large" />
+                </button>
+                <h1 className="text-xl sm:text-2xl font-semibold">
+                    Registrar Clientes
+                </h1>
+            </header>
 
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" my={1}>
-                <Button variant="outlined" component="label" sx={{ mr: 2, color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR, '&:hover': { borderColor: PRIMARY_COLOR, backgroundColor: 'rgba(26, 67, 20, 0.04)' } }}>
-                  Escolher Imagem de Perfil
-                  <input type="file" hidden onChange={handleChange} name="imagem" accept="image/*" />
-                </Button>
-                <Typography variant="body2" color="textSecondary">
-                  {selectedFile ? `Arquivo Selecionado: ${selectedFile.name}` : 'Nenhuma imagem selecionada.'}
-                </Typography>
-              </Box>
-            </Grid>
+            {/* CONTEÚDO PRINCIPAL (FORMULÁRIO SIMPLIFICADO E CENTRALIZADO) */}
+            <main className="flex-grow p-4 sm:p-8 flex justify-center">
+                {/* Form Container: Max-w-lg (Centralizado) */}
+                <form onSubmit={handleRegister} className="w-full max-w-lg bg-white shadow-xl rounded-lg p-6 sm:p-8 space-y-4">
+                    
+                    <h2 className="text-2xl font-bold text-center mb-6" style={{ color: PRIMARY_COLOR }}>
+                        Dados de Cadastro
+                    </h2>
 
-          </Grid>
+                    {/* Área de Status/Feedback */}
+                    {status.message && (
+                        <div className={`p-3 rounded-md border-l-4 font-medium text-sm ${
+                            status.type === 'error' ? 'bg-red-100 border-red-500 text-red-700' :
+                            status.type === 'success' ? 'bg-green-100 border-green-500 text-green-700' :
+                            'bg-blue-100 border-blue-500 text-blue-700'
+                        } mb-4`}>
+                            {status.message}
+                        </div>
+                    )}
+                    
+                    {/* Campos do Formulário em Linhas (Estrutura Simples) */}
+                    <div className="space-y-4">
+                        
+                        {/* ------------------- DADOS PESSOAIS ------------------- */}
+                        <div className="pt-2">
+                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
+                                Informações Pessoais
+                            </h3>
+                        </div>
+                        
+                        {renderInputWithLabel("Nome Completo", "nomeCompleto", formData.nomeCompleto, 'text', true)}
+                        {renderMaskedField("CPF", "cpf", formData.cpf, "999.999.999-99", true)}
+                        {renderInputWithLabel("RG", "rg", formData.rg, 'text', true)}
+                        {renderInputWithLabel("CNPJ (Opcional - Caso queira comprar como empresa)", "cnpj", formData.cnpj, 'text', false)}
+                        {renderInputWithLabel("Data de nascimento", "dataNascimento", formData.dataNascimento, 'date', false)}
+                        
+                        {/* ------------------- CONTATO E LOGIN ------------------- */}
+                        <div className="pt-4">
+                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
+                                Contato e Login
+                            </h3>
+                        </div>
 
-          {/* Botões de Ação */}
-          <Box display="flex" justifyContent="flex-start" gap={2} mt={4} flexWrap="wrap">
-            <Button variant="outlined" color="error" onClick={() => navigate('/register')}>
-              Cancelar e Voltar
-            </Button>
-            <Button variant="outlined" color="warning" onClick={handleClear}>
-              Limpar Campos
-            </Button>
-            <Button type="submit" variant="contained" sx={{ backgroundColor: PRIMARY_COLOR, color: 'white', '&:hover': { backgroundColor: '#38761d' } }}>
-              Salvar Cadastro
-            </Button>
-          </Box>
-          
-          {/* Rodapé interno com texto do projeto */}
-          <Box mt={6} py={3} sx={{ fontSize: '0.75rem', color: '#555', borderTop: '1px solid #eee' }}>
-            <Typography variant="caption" display="block">
-              &copy; AgroHub - Projeto Acadêmico 2025
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-              Este é um protótipo acadêmico... [texto completo da descrição do projeto].
-            </Typography>
-          </Box>
-        </FormWrapper>
-        
-        {/* RODAPÉ EXTERNO */}
-        <Footer>
-          copyright AgroHub - 2025
-        </Footer>
-      </RegisterContainer>
-    );
+                        {renderInputWithLabel("E-mail", "email", formData.email, 'email', true)}
+                        {renderInputWithLabel("Senha", "senha", formData.senha, 'password', true)}
+                        {renderMaskedField("Telefone", "telefone", formData.telefone, "(99) 99999-9999", true)}
+                        {renderInputWithLabel("Rede social (Opcional)", "redeSocial", formData.redeSocial)}
+                        {renderInputWithLabel("Url site (Opcional)", "website", formData.website, 'url')}
+
+                        {/* ------------------- ENDEREÇO ------------------- */}
+                        <div className="pt-4">
+                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
+                                Endereço
+                            </h3>
+                        </div>
+
+                        {renderMaskedField("CEP", "cep", formData.cep, "99999-999", true)}
+                        {renderInputWithLabel("Rua", "rua", formData.rua, 'text', true)}
+                        <div className="flex gap-4">
+                            {renderInputWithLabel("Número", "numero", formData.numero, 'text', true)}
+                            {renderInputWithLabel("Estado (Ex: SP)", "estado", formData.estado, 'text', true, 2)}
+                        </div>
+                        {renderInputWithLabel("Bairro", "bairro", formData.bairro, 'text', true)}
+                        {renderInputWithLabel("Cidade", "cidade", formData.cidade, 'text', true)}
+                        {renderInputWithLabel("Complemento (Ex: Apto 101)", "complemento", formData.complemento)}
+
+                        {/* ------------------- IMAGEM ------------------- */}
+                        <div className="pt-4">
+                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
+                                Imagem de Perfil
+                            </h3>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <label 
+                                className="flex-grow px-4 py-2 border border-gray-400 rounded-sm cursor-pointer text-gray-500 bg-gray-50 hover:bg-gray-100 transition duration-150 text-sm" 
+                                htmlFor="imagem-upload"
+                            >
+                                {selectedFile ? `Arquivo Selecionado: ${selectedFile.name}` : 'Escolher Arquivo'}
+                                <input type="file" hidden onChange={handleChange} name="imagem" id="imagem-upload" accept="image/*" />
+                            </label>
+                            <button type="button" 
+                                style={{ backgroundColor: PRIMARY_COLOR }}
+                                className="px-4 py-2 text-white font-medium rounded-sm shadow-sm hover:bg-green-800 transition duration-150 text-sm">
+                                Visualizar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    {/* Botões de Ação */}
+                    <div className="flex flex-wrap justify-start gap-4 pt-6 border-t border-gray-300 mt-6">
+                        <button type="button" onClick={() => navigate('/register')}
+                            style={{ backgroundColor: ERROR_COLOR }}
+                            className="px-6 py-2 text-white font-semibold rounded-md shadow-md hover:opacity-90 transition duration-150 text-sm">
+                            Cancelar e voltar
+                        </button>
+                        <button type="button" onClick={handleClear}
+                            style={{ backgroundColor: WARNING_COLOR }}
+                            className="px-6 py-2 text-white font-semibold rounded-md shadow-md hover:opacity-90 transition duration-150 text-sm">
+                            Limpar Campos
+                        </button>
+                        <button type="submit"
+                            style={{ backgroundColor: PRIMARY_COLOR }}
+                            className="px-8 py-2 text-white font-semibold rounded-md shadow-md hover:bg-green-800 transition duration-150 text-sm">
+                            Salvar
+                        </button>
+                    </div>
+
+                    {/* Rodapé interno (Texto do Projeto) */}
+                    <div className="mt-8 pt-4 text-xs text-gray-500 border-t border-gray-200 leading-relaxed">
+                        <p className="font-bold">&copy; AgroHub - Projeto Acadêmico 2025</p>
+                        <p className="mt-1">Este é um protótipo acadêmico...</p>
+                    </div>
+
+                </form>
+            </main>
+            
+            {/* RODAPÉ EXTERNO (Copyright Verde Escuro) */}
+            <footer style={{ backgroundColor: PRIMARY_COLOR, color: LIGHT_COLOR }} className="p-4 text-center text-xs mt-auto shadow-inner">
+                copyright AgroHub - 2025
+            </footer>
+        </div>
+    );
 }

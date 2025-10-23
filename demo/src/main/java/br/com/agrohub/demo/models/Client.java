@@ -52,15 +52,11 @@ public class Client {
     @Column(name = "foto_perfil", length = 255)
     private String fotoPerfil;
     
-    // ⭐ CAMPOS ADICIONADOS PARA COMPATIBILIDADE COM DTO/MAPPER ⭐
-    @Column(name = "rede_social", length = 100)
-    private String redeSocial; 
-
-    @Column(name = "website", length = 100)
-    private String website;
-    // -------------------------------------------------------------
-
+    // ⭐ CAMPOS REDUNDANTES DE CONTATO (REDE SOCIAL, WEBSITE) REMOVIDOS ⭐
+    // Eles pertencem à entidade Contact, onde já estão mapeados corretamente.
+    
     // Relacionamento One-to-One com Contato
+    // Esta coluna (contato_id) existe na tabela 'clientes' e é a chave para os dados de contato.
     @OneToOne
     @JoinColumn(name = "contato_id", nullable = false)
     private Contact contact;
