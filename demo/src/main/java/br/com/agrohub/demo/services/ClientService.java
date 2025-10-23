@@ -6,15 +6,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.agrohub.demo.dto.ClientProfileResponseDTO;
-import br.com.agrohub.demo.dto.ClientRegisterRequestDTO; // NOVO: DTO de registro
+import br.com.agrohub.demo.dto.ClientRegisterRequestDTO; 
 import br.com.agrohub.demo.mappers.ClientMapper;
 import br.com.agrohub.demo.models.Client;
 import br.com.agrohub.demo.models.ClientAddress;
+import br.com.agrohub.demo.models.Contact; // NOVO: Para lidar com a entidade de Contato
 import br.com.agrohub.demo.models.Pedido;
-import br.com.agrohub.demo.models.User; // Para criar o usuário base
-import br.com.agrohub.demo.models.UserType; // Para definir o tipo de usuário
+import br.com.agrohub.demo.models.User; 
+import br.com.agrohub.demo.models.UserType; 
 import br.com.agrohub.demo.repository.ClientRepository;
-import br.com.agrohub.demo.security.AuthSecurity; // NOVO: Para criar o usuário e criptografar a senha
+import br.com.agrohub.demo.repository.ContactRepository; // ⭐ NOVO: Repositório para salvar Contato
+import br.com.agrohub.demo.security.AuthSecurity; 
 import jakarta.persistence.EntityNotFoundException;
 
 /**
@@ -24,47 +26,56 @@ import jakarta.persistence.EntityNotFoundException;
 public class ClientService {
 
     private final ClientRepository clientRepository;
+    private final ContactRepository contactRepository; // ⭐ NOVO: Repositório injetado
     private final ClientMapper clientMapper;
-    private final AuthSecurity authSecurity; // NOVO: Injeção para lidar com a criação do User
+    private final AuthSecurity authSecurity; 
 
-    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper, AuthSecurity authSecurity) {
+    // CONSTRUTOR ATUALIZADO PARA INCLUIR ContactRepository
+    public ClientService(ClientRepository clientRepository, ContactRepository contactRepository, ClientMapper clientMapper, AuthSecurity authSecurity) {
         this.clientRepository = clientRepository;
+        this.contactRepository = contactRepository;
         this.clientMapper = clientMapper;
         this.authSecurity = authSecurity;
     }
 
     /**
-     * NOVO MÉTODO: Lógica para registrar um novo cliente.
+     * Lógica para registrar um novo cliente.
      * @param requestDTO Os dados do cliente do Front-end.
      */
     @Transactional
     public void registerClient(ClientRegisterRequestDTO requestDTO) {
         
-        // 1. CRIAR O USUÁRIO BASE (o registro de senha e autenticação)
-        // Isso utiliza o método registerNewUser que já existe no seu AuthSecurity
+        // 1. CRIAR E SALVAR A ENTIDADE CONTATO
+        // Mapeia o DTO aninhado (ContactDTO) para a Entidade Contact
+        Contact contact = clientMapper.toContact(requestDTO.getContact());
+        // SALVAR ANTES: A entidade Client tem uma chave estrangeira NOT NULL para Contact
+        contact = contactRepository.save(contact); 
+
+        // 2. CRIAR O USUÁRIO BASE
+        // CORREÇÃO: Acessa o email através do objeto aninhado 'contact'
         User newUser = authSecurity.registerNewUser(
-                requestDTO.getEmail(), 
+                requestDTO.getContact().getEmail(), // ⭐ CORREÇÃO APLICADA AQUI
                 requestDTO.getCpf(), 
                 requestDTO.getSenha(), 
                 UserType.CLIENTE
         );
         
-        // 2. CRIAR A ENTIDADE CLIENTE
-        // Mapeia os dados do DTO para a Entidade Cliente
-        Client client = clientMapper.toClient(requestDTO); // Assumindo que você tem um toClient(DTO) no seu ClientMapper
-        client.setUser(newUser); // Associa o User recém-criado ao Client
+        // 3. CRIAR A ENTIDADE CLIENTE
+        Client client = clientMapper.toClient(requestDTO); 
         
-        // **3. ADICIONAR LÓGICA COMPLEMENTAR**
-        // * Lógica para mapear requestDTO.getEndereco() para Address e ClientAddress
-        // * Lógica para mapear requestDTO.getTelefone() para Contact
-        // * O ClientMapper precisará ser atualizado para lidar com isso, ou você pode usar Services dedicados.
-        
+        // Associa as entidades recém-criadas ao Cliente
+        client.setUser(newUser);      // Associa o User
+        client.setContact(contact);   // Associa o Contato salvo
+
         // 4. SALVAR O CLIENTE
         clientRepository.save(client);
+        
+        // 5. LÓGICA COMPLEMENTAR (Endereço, se for o caso)
     }
     
-    // ... Seu método getClientProfile() continua aqui ...
-    
+    /**
+     * Busca o perfil completo do cliente pelo ID do Usuário.
+     */
     @Transactional(readOnly = true)
     public ClientProfileResponseDTO getClientProfile(Long userId) {
         

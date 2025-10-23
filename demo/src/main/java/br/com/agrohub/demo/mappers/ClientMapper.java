@@ -2,12 +2,14 @@ package br.com.agrohub.demo.mappers;
 
 // DTOs
 import br.com.agrohub.demo.dto.ClientProfileResponseDTO;
-import br.com.agrohub.demo.dto.ClientRegisterRequestDTO; // NOVO: DTO de registro
+import br.com.agrohub.demo.dto.ClientRegisterRequestDTO; 
+import br.com.agrohub.demo.dto.ContactDTO; // ⭐ NOVO IMPORT
 import br.com.agrohub.demo.dto.HistoricoPedidoDTO;
 
 // Entidades (models)
 import br.com.agrohub.demo.models.Client;
 import br.com.agrohub.demo.models.User;
+import br.com.agrohub.demo.models.Contact; // ⭐ NOVO IMPORT
 import br.com.agrohub.demo.models.ClientAddress;
 import br.com.agrohub.demo.models.Pedido;
 import br.com.agrohub.demo.models.ItemPedido; 
@@ -34,21 +36,39 @@ public class ClientMapper {
     // =================================================================
 
     /**
-     * NOVO MÉTODO: Mapeia ClientRegisterRequestDTO para a Entidade Client.
-     * ATENÇÃO: Campos de User (email, cpf, senha) são mapeados no AuthSecurity/ClientService.
-     * ATENÇÃO: Campos de Address/Contact precisam de mappers/lógica adicionais no Service.
+     * Mapeia ClientRegisterRequestDTO para a Entidade Client (apenas campos diretos).
+     * O Service deverá criar e associar as entidades User, Contact e Address.
      */
     public Client toClient(ClientRegisterRequestDTO dto) {
         Client client = new Client();
         
         client.setNomeCompleto(dto.getNomeCompleto());
         client.setRg(dto.getRg());
+        client.setCnpj(dto.getCnpj()); // Adicionando CNPJ
         client.setDataNascimento(dto.getDataNascimento());
-        client.setRedeSocial(dto.getRedeSocial());
-        client.setWebsite(dto.getWebsite());
-        // Obs: O ID do User será setado no ClientService.java
+        
+        // ❌ REMOVIDOS: client.setRedeSocial(dto.getRedeSocial()); e client.setWebsite(dto.getWebsite());
+        // Esses campos são redundantes no Client e devem ser mapeados via toContact para a entidade Contact.
         
         return client;
+    }
+    
+    /**
+     * ⭐ NOVO MÉTODO: Mapeia o DTO aninhado de Contato para a Entidade Contact.
+     */
+    public Contact toContact(ContactDTO contactDTO) {
+        if (contactDTO == null) return null; // Ou lance uma exceção se for obrigatório
+        
+        Contact contact = new Contact();
+        
+        contact.setEmail(contactDTO.getEmail());
+        contact.setTelefone(contactDTO.getTelefone());
+        contact.setRedeSocial(contactDTO.getRedeSocial());
+        
+        // ⭐ CORREÇÃO DE NOME: Mapeia 'website' do DTO para 'urlSite' da Entidade Contact
+        contact.setUrlSite(contactDTO.getWebsite());
+        
+        return contact;
     }
 
 
@@ -56,25 +76,30 @@ public class ClientMapper {
     // 2. MAPEAR PARA DTO (Perfil - Entity to Response)
     // =================================================================
 
-    // ... (O restante do seu código toClientProfileDTO e toHistoricoPedidoDTOList continua igual) ...
     /**
      * Mapeia Client, Pedidos e Endereços para o DTO de Perfil.
-     * Assinatura Correta: List<ClientAddress> addresses
      */
     public ClientProfileResponseDTO toClientProfileDTO(Client client, List<Pedido> pedidos, List<ClientAddress> addresses) {
         
         User user = client.getUser();
+        Contact contact = client.getContact(); // Obtendo a entidade Contact associada
 
         ClientProfileResponseDTO dto = new ClientProfileResponseDTO();
 
         // 1. DADOS DE USUÁRIO E CLIENTE
         dto.setId(client.getId());
-        dto.setEmail(user.getEmail());
+        dto.setEmail(user != null ? user.getEmail() : null); // Email do User
         dto.setNomeCompleto(client.getNomeCompleto());
-        dto.setCpf(user.getCpf()); 
+        dto.setCpf(client.getCpf()); // CPF do Client
         dto.setRg(client.getRg());
+        dto.setCnpj(client.getCnpj()); // CNPJ do Client
         dto.setDataNascimento(client.getDataNascimento());
-        dto.setTelefone(client.getContact() != null ? client.getContact().getTelefone() : null); 
+        
+        // Mapeando dados do Contact
+        if (contact != null) {
+            dto.setTelefone(contact.getTelefone()); 
+            // Os outros campos de contato (rede social, website) também poderiam ser adicionados aqui se o DTO de resposta exigir.
+        }
 
         // 2. ENDEREÇOS CADASTRADOS
         dto.setEnderecos(addresses.stream()

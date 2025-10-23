@@ -25,12 +25,22 @@ public class ClientProfileResponseDTO implements Serializable {
     private String nomeCompleto;
     private String cpf;
     private String rg;
+    
+    // ⭐ CORREÇÃO: ADICIONADO CNPJ (Estava faltando e causava erro no Mapper)
+    private String cnpj; 
+    
     private LocalDate dataNascimento;
+    
+    // 2. DADOS DE CONTATO
     private String telefone; // Contato principal
-
-    // 2. ENDEREÇOS CADASTRADOS
+    
+    // ⭐ ADICIONADOS: Para exibir todos os dados da Entidade Contact
+    private String redeSocial; 
+    private String website; // Corresponde a urlSite na Entidade Contact
+    
+    // 3. ENDEREÇOS CADASTRADOS
     private List<EnderecoDTO> enderecos;
 
-    // 3. HISTÓRICO DE COMPRAS
+    // 4. HISTÓRICO DE COMPRAS
     private List<HistoricoPedidoDTO> historicoPedidos;
 }
