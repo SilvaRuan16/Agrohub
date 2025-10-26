@@ -1,305 +1,284 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import InputMask from 'react-input-mask';
-
+import styled from 'styled-components';
+import { 
+  Box, Typography, TextField, Button, Grid, IconButton, Alert, CircularProgress 
+} from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 
-// --- Constantes de Estilo ---
-const PRIMARY_COLOR = '#1a4314'; // Verde Escuro
-const LIGHT_COLOR = '#c8e6c9'; // Verde Claro (Texto do Footer)
-const WARNING_COLOR = '#f97316'; // Laranja (Botão Limpar Campos)
-const ERROR_COLOR = '#ef4444'; // Vermelho (Botão Cancelar)
+// --- Styled Components (Mesmo padrão da tela de empresa) ---
+const RegisterContainer = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+`;
 
-// --- Componente de Input Mascarado Reutilizável ---
-const MaskedInput = React.forwardRef((props, ref) => {
-    return (
-        <InputMask 
-            {...props} 
-            ref={ref}
-            maskChar={null}
-            // Estilo simples de input para formulário centralizado
-            className="w-full px-4 py-2 border border-gray-400 rounded-sm focus:outline-none focus:ring-1 focus:ring-green-700 shadow-sm"
-        />
-    );
-});
+const Header = styled(Box)`
+  background-color: #1a4314;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+`;
 
+const FormContainer = styled(Box)`
+  flex-grow: 1;
+  padding: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+
+  @media (max-width: 600px) {
+    padding: 20px;
+  }
+`;
+
+const Footer = styled(Box)`
+  background-color: #1a4314;
+  color: #c8e6c9;
+  padding: 20px 40px;
+  font-size: 0.75rem;
+  text-align: center;
+  flex-shrink: 0;
+`;
 
 // --- Componente Principal ---
-
 export default function RegisterClientScreen() {
-    const navigate = useNavigate();
-    const API_URL = 'http://localhost:8080/api/v1/clients/register'; 
-    
-    const [formData, setFormData] = useState({
-        nomeCompleto: '', cpf: '', rg: '', cnpj: '', 
-        email: '', senha: '', dataNascimento: '', telefone: '',
-        redeSocial: '', website: '', 
-        rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '',
+  const navigate = useNavigate();
+  const API_URL = 'http://localhost:8080/api/v1/clients/register'; 
+
+  const [formData, setFormData] = useState({
+    nomeCompleto: '', cpf: '', rg: '', cnpj: '', 
+    email: '', senha: '', dataNascimento: '', telefone: '',
+    redeSocial: '', website: '', 
+    rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '',
+  });
+
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'imagem' && files?.length > 0) {
+      setSelectedFile(files[0]);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    setStatus({ type: '', message: '' });
+  };
+
+  const handleClear = () => {
+    setFormData({
+      nomeCompleto: '', cpf: '', rg: '', cnpj: '',
+      email: '', senha: '', dataNascimento: '', telefone: '',
+      redeSocial: '', website: '', rua: '', numero: '',
+      bairro: '', cidade: '', estado: '', cep: '', complemento: '',
     });
-    
-    const [status, setStatus] = useState({ type: '', message: '' });
-    const [selectedFile, setSelectedFile] = useState(null); 
+    setSelectedFile(null);
+    setStatus({ type: '', message: '' });
+  };
 
-    // ... [Funções handleChange, handleClear e handleRegister permanecem as mesmas] ...
-    const handleChange = (e) => {
-        const { name, value, files } = e.target;
-        
-        if (name === 'imagem' && files && files.length > 0) {
-            setSelectedFile(files[0]);
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
-        setStatus({ type: '', message: '' }); 
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setStatus({ type: '', message: '' });
+    setLoading(true);
+
+    const payload = {
+      nomeCompleto: formData.nomeCompleto,
+      senha: formData.senha,
+      dataNascimento: formData.dataNascimento,
+      cpf: formData.cpf.replace(/\D/g, ''),
+      rg: formData.rg.replace(/\D/g, ''),
+      cnpj: formData.cnpj.replace(/\D/g, ''),
+      contact: {
+        email: formData.email,
+        telefone: formData.telefone.replace(/\D/g, ''),
+        redeSocial: formData.redeSocial,
+        website: formData.website,
+      },
+      endereco: {
+        rua: formData.rua,
+        numero: formData.numero,
+        bairro: formData.bairro,
+        cidade: formData.cidade,
+        estado: formData.estado,
+        cep: formData.cep.replace(/\D/g, ''),
+        complemento: formData.complemento,
+      },
     };
-    
-    const handleClear = () => {
-        setFormData({
-            nomeCompleto: '', cpf: '', rg: '', cnpj: '',
-            email: '', senha: '', dataNascimento: '', telefone: '',
-            redeSocial: '', website: '', rua: '', numero: '',
-            bairro: '', cidade: '', estado: '', cep: '', complemento: '',
-        });
-        setSelectedFile(null); 
-        setStatus({ type: '', message: '' });
-    };
 
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        setStatus({ type: 'info', message: 'Tentando cadastrar cliente...' });
-        
-        const clientData = {
-            nomeCompleto: formData.nomeCompleto, 
-            senha: formData.senha, 
-            dataNascimento: formData.dataNascimento, 
-            
-            cpf: formData.cpf.replace(/[^0-9]/g, ''), 
-            rg: formData.rg.replace(/[^0-9]/g, ''), 
-            cnpj: formData.cnpj.replace(/[^0-9]/g, ''), 
-            
-            contact: { 
-                email: formData.email,
-                telefone: formData.telefone.replace(/[^0-9]/g, ''),
-                redeSocial: formData.redeSocial,
-                website: formData.website,
-            },
+    try {
+      await axios.post(API_URL, payload);
+      setStatus({ type: 'success', message: 'Cliente cadastrado com sucesso!' });
+      setLoading(false);
+      navigate('/');
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      const errorMsg = error.response?.data?.message || "Ocorreu um erro inesperado. Verifique os dados.";
+      setStatus({ type: 'error', message: errorMsg });
+      setLoading(false);
+    }
+  };
 
-            endereco: { 
-                rua: formData.rua,
-                numero: formData.numero,
-                bairro: formData.bairro,
-                cidade: formData.cidade,
-                estado: formData.estado,
-                cep: formData.cep.replace(/[^0-9]/g, ''), 
-                complemento: formData.complemento, 
-            }
-        };
-        
-        console.log('Payload final enviado para a API:', clientData);
+  return (
+    <RegisterContainer>
+      <Header>
+        <IconButton onClick={() => navigate('/register')} style={{ color: 'white', marginRight: '10px' }}>
+          <ArrowBack />
+        </IconButton>
+        <Typography variant="h6">Registrar Clientes</Typography>
+      </Header>
 
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(clientData),
-            });
+      <FormContainer component="form" onSubmit={handleRegister}>
+        {status.message && (
+          <Alert severity={status.type} sx={{ mb: 3 }}>
+            {status.message}
+          </Alert>
+        )}
 
-            if (response.ok) {
-                console.log('✅ Cadastro realizado com sucesso!');
-                setStatus({ type: 'success', message: 'Cadastro realizado com sucesso! Redirecionando...' });
-                setTimeout(() => navigate('/'), 2000); 
-            } else {
-                const errorText = await response.text();
-                let errorMessage = `Erro ${response.status}: ${errorText.substring(0, 100)}...`;
-                
-                try {
-                    const errorData = JSON.parse(errorText);
-                    errorMessage = `Erro (${response.status}): ${errorData.message || 'Erro desconhecido.'}`;
-                } catch (e) { /* Não é JSON */ }
-                
-                console.error('❌ Falha na Requisição (Status:', response.status, ') Resposta Bruta:', errorText);
-                setStatus({ type: 'error', message: `Falha: ${errorMessage}. Verifique o console para detalhes.` });
-            }
-        } catch (error) {
-            console.error('❌ Erro de Rede ou CORS:', error);
-            setStatus({ type: 'error', message: 'Erro de comunicação. Verifique se o Back-end está rodando e se o CORS está configurado.' });
-        }
-    };
-    
-    // Função auxiliar para renderizar um input padrão
-    // Todos os campos agora ocupam a largura total do container do formulário
-    const renderInputWithLabel = (label, name, value, type = 'text', required = false, maxLength = null) => (
-        <div className="flex flex-col space-y-1 w-full">
-            <label htmlFor={name} className="text-sm font-medium text-gray-800">
-                {label}
-                {required && <span className="text-red-500">*</span>}
-            </label>
-            <input
-                id={name}
-                name={name}
-                type={type}
-                value={value}
-                onChange={handleChange}
-                required={required}
-                maxLength={maxLength}
-                placeholder={label}
-                className="w-full px-4 py-2 border border-gray-400 rounded-sm focus:outline-none focus:ring-1 focus:ring-green-700 transition duration-150 shadow-sm"
+        <Grid container spacing={3}>
+          {/* COLUNA 1 - Dados pessoais e contato */}
+          <Grid item xs={12} sm={6}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              style={{ color: '#1a4314', borderBottom: '1px solid #ddd', paddingBottom: '5px', marginBottom: '15px' }}
+            >
+              Informações Pessoais
+            </Typography>
+
+            <TextField label="Nome Completo" name="nomeCompleto" value={formData.nomeCompleto} onChange={handleChange} fullWidth margin="normal" required />
+
+            <InputMask mask="999.999.999-99" value={formData.cpf} onChange={handleChange} name="cpf">
+              {(inputProps) => <TextField {...inputProps} label="CPF" fullWidth margin="normal" required />}
+            </InputMask>
+
+            <TextField label="RG" name="rg" value={formData.rg} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="CNPJ (Opcional)" name="cnpj" value={formData.cnpj} onChange={handleChange} fullWidth margin="normal" />
+            <TextField 
+              label="Data de Nascimento" 
+              name="dataNascimento" 
+              type="date" 
+              value={formData.dataNascimento} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              InputLabelProps={{ shrink: true }} 
             />
-        </div>
-    );
-    
-    // Função auxiliar para input mascarado
-    const renderMaskedField = (label, name, value, mask, required = false) => (
-        <div className="flex flex-col space-y-1 w-full">
-            <label htmlFor={name} className="text-sm font-medium text-gray-800">
-                {label}
-                {required && <span className="text-red-500">*</span>}
-            </label>
-            <MaskedInput 
-                mask={mask} 
-                name={name}
-                value={value}
-                onChange={handleChange}
-                required={required}
-                placeholder={label} 
-            />
-        </div>
-    );
 
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              style={{ color: '#1a4314', borderBottom: '1px solid #ddd', paddingBottom: '5px', marginTop: '30px', marginBottom: '15px' }}
+            >
+              Contato e Login
+            </Typography>
 
-    return (
-        <div className="min-h-screen flex flex-col bg-gray-100">
-            
-            {/* CABEÇALHO (Menu Verde Escuro) */}
-            <header style={{ backgroundColor: PRIMARY_COLOR }} className="text-white p-4 sm:p-5 flex items-center shadow-lg w-full">
-                <button onClick={() => navigate('/register')} className="text-white mr-4 p-1 rounded-full hover:bg-green-700 transition duration-150">
-                    <ArrowBack fontSize="large" />
-                </button>
-                <h1 className="text-xl sm:text-2xl font-semibold">
-                    Registrar Clientes
-                </h1>
-            </header>
+            <TextField label="E-mail" name="email" value={formData.email} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="Senha" name="senha" type="password" value={formData.senha} onChange={handleChange} fullWidth margin="normal" required />
+            <InputMask mask="(99) 99999-9999" value={formData.telefone} onChange={handleChange} name="telefone">
+              {(inputProps) => <TextField {...inputProps} label="Telefone" fullWidth margin="normal" required />}
+            </InputMask>
+            <TextField label="Rede Social (Opcional)" name="redeSocial" value={formData.redeSocial} onChange={handleChange} fullWidth margin="normal" />
+            <TextField label="URL Site (Opcional)" name="website" value={formData.website} onChange={handleChange} fullWidth margin="normal" />
+          </Grid>
 
-            {/* CONTEÚDO PRINCIPAL (FORMULÁRIO SIMPLIFICADO E CENTRALIZADO) */}
-            <main className="flex-grow p-4 sm:p-8 flex justify-center">
-                {/* Form Container: Max-w-lg (Centralizado) */}
-                <form onSubmit={handleRegister} className="w-full max-w-lg bg-white shadow-xl rounded-lg p-6 sm:p-8 space-y-4">
-                    
-                    <h2 className="text-2xl font-bold text-center mb-6" style={{ color: PRIMARY_COLOR }}>
-                        Dados de Cadastro
-                    </h2>
+          {/* COLUNA 2 - Endereço e imagem */}
+          <Grid item xs={12} sm={6}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              style={{ color: '#1a4314', borderBottom: '1px solid #ddd', paddingBottom: '5px', marginBottom: '15px' }}
+            >
+              Endereço
+            </Typography>
 
-                    {/* Área de Status/Feedback */}
-                    {status.message && (
-                        <div className={`p-3 rounded-md border-l-4 font-medium text-sm ${
-                            status.type === 'error' ? 'bg-red-100 border-red-500 text-red-700' :
-                            status.type === 'success' ? 'bg-green-100 border-green-500 text-green-700' :
-                            'bg-blue-100 border-blue-500 text-blue-700'
-                        } mb-4`}>
-                            {status.message}
-                        </div>
-                    )}
-                    
-                    {/* Campos do Formulário em Linhas (Estrutura Simples) */}
-                    <div className="space-y-4">
-                        
-                        {/* ------------------- DADOS PESSOAIS ------------------- */}
-                        <div className="pt-2">
-                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
-                                Informações Pessoais
-                            </h3>
-                        </div>
-                        
-                        {renderInputWithLabel("Nome Completo", "nomeCompleto", formData.nomeCompleto, 'text', true)}
-                        {renderMaskedField("CPF", "cpf", formData.cpf, "999.999.999-99", true)}
-                        {renderInputWithLabel("RG", "rg", formData.rg, 'text', true)}
-                        {renderInputWithLabel("CNPJ (Opcional - Caso queira comprar como empresa)", "cnpj", formData.cnpj, 'text', false)}
-                        {renderInputWithLabel("Data de nascimento", "dataNascimento", formData.dataNascimento, 'date', false)}
-                        
-                        {/* ------------------- CONTATO E LOGIN ------------------- */}
-                        <div className="pt-4">
-                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
-                                Contato e Login
-                            </h3>
-                        </div>
+            <InputMask mask="99999-999" value={formData.cep} onChange={handleChange} name="cep">
+              {(inputProps) => <TextField {...inputProps} label="CEP" fullWidth margin="normal" required />}
+            </InputMask>
 
-                        {renderInputWithLabel("E-mail", "email", formData.email, 'email', true)}
-                        {renderInputWithLabel("Senha", "senha", formData.senha, 'password', true)}
-                        {renderMaskedField("Telefone", "telefone", formData.telefone, "(99) 99999-9999", true)}
-                        {renderInputWithLabel("Rede social (Opcional)", "redeSocial", formData.redeSocial)}
-                        {renderInputWithLabel("Url site (Opcional)", "website", formData.website, 'url')}
+            <TextField label="Rua" name="rua" value={formData.rua} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="Número" name="numero" value={formData.numero} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="Bairro" name="bairro" value={formData.bairro} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="Estado" name="estado" value={formData.estado} onChange={handleChange} fullWidth margin="normal" required />
+            <TextField label="Complemento" name="complemento" value={formData.complemento} onChange={handleChange} fullWidth margin="normal" />
 
-                        {/* ------------------- ENDEREÇO ------------------- */}
-                        <div className="pt-4">
-                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
-                                Endereço
-                            </h3>
-                        </div>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              style={{ color: '#1a4314', borderBottom: '1px solid #ddd', paddingBottom: '5px', marginTop: '30px', marginBottom: '15px' }}
+            >
+              Imagem de Perfil
+            </Typography>
 
-                        {renderMaskedField("CEP", "cep", formData.cep, "99999-999", true)}
-                        {renderInputWithLabel("Rua", "rua", formData.rua, 'text', true)}
-                        <div className="flex gap-4">
-                            {renderInputWithLabel("Número", "numero", formData.numero, 'text', true)}
-                            {renderInputWithLabel("Estado (Ex: SP)", "estado", formData.estado, 'text', true, 2)}
-                        </div>
-                        {renderInputWithLabel("Bairro", "bairro", formData.bairro, 'text', true)}
-                        {renderInputWithLabel("Cidade", "cidade", formData.cidade, 'text', true)}
-                        {renderInputWithLabel("Complemento (Ex: Apto 101)", "complemento", formData.complemento)}
+            <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+              <Button
+                variant="contained"
+                component="label"
+                sx={{ backgroundColor: '#1a4314', color: 'white', '&:hover': { backgroundColor: '#245a1d' } }}
+              >
+                Escolher Imagem
+                <input type="file" hidden name="imagem" accept="image/*" onChange={handleChange} />
+              </Button>
+              {selectedFile && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2">{selectedFile.name}</Typography>
+                  <img
+                    src={URL.createObjectURL(selectedFile)}
+                    alt="preview"
+                    style={{ width: '100%', maxWidth: '250px', borderRadius: '8px', marginTop: '10px' }}
+                  />
+                </Box>
+              )}
+            </Box>
+          </Grid>
+        </Grid>
 
-                        {/* ------------------- IMAGEM ------------------- */}
-                        <div className="pt-4">
-                             <h3 className="text-lg font-semibold mb-3 pb-1 border-b border-gray-300" style={{ color: PRIMARY_COLOR }}>
-                                Imagem de Perfil
-                            </h3>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <label 
-                                className="flex-grow px-4 py-2 border border-gray-400 rounded-sm cursor-pointer text-gray-500 bg-gray-50 hover:bg-gray-100 transition duration-150 text-sm" 
-                                htmlFor="imagem-upload"
-                            >
-                                {selectedFile ? `Arquivo Selecionado: ${selectedFile.name}` : 'Escolher Arquivo'}
-                                <input type="file" hidden onChange={handleChange} name="imagem" id="imagem-upload" accept="image/*" />
-                            </label>
-                            <button type="button" 
-                                style={{ backgroundColor: PRIMARY_COLOR }}
-                                className="px-4 py-2 text-white font-medium rounded-sm shadow-sm hover:bg-green-800 transition duration-150 text-sm">
-                                Visualizar
-                            </button>
-                        </div>
+        {/* Botões */}
+        <Box display="flex" justifyContent="flex-start" gap={2} mt={4}>
+          <Button 
+            variant="contained" 
+            style={{ backgroundColor: '#e57373', color: 'white' }}
+            onClick={() => navigate('/register')}
+          >
+            Cancelar e voltar
+          </Button>
+          <Button 
+            variant="contained" 
+            style={{ backgroundColor: '#ffb74d', color: 'white' }} 
+            onClick={handleClear}
+          >
+            Limpar Campos
+          </Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            style={{ backgroundColor: '#1a4314', color: 'white' }} 
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Salvar'}
+          </Button>
+        </Box>
 
-                    </div>
+        {/* Rodapé interno */}
+        <Box mt={4} py={3} sx={{ fontSize: '0.75rem', color: '#555', borderTop: '1px solid #eee' }}>
+          <Typography variant="caption" display="block">
+            &copy; AgroHub - Projeto Acadêmico 2025
+          </Typography>
+          <Typography variant="caption" display="block">
+            Este é um protótipo acadêmico desenvolvido para propor soluções inovadoras para o setor agroalimentar. 
+            Todos os conteúdos e funcionalidades têm caráter experimental e educacional.
+          </Typography>
+        </Box>
+      </FormContainer>
 
-                    {/* Botões de Ação */}
-                    <div className="flex flex-wrap justify-start gap-4 pt-6 border-t border-gray-300 mt-6">
-                        <button type="button" onClick={() => navigate('/register')}
-                            style={{ backgroundColor: ERROR_COLOR }}
-                            className="px-6 py-2 text-white font-semibold rounded-md shadow-md hover:opacity-90 transition duration-150 text-sm">
-                            Cancelar e voltar
-                        </button>
-                        <button type="button" onClick={handleClear}
-                            style={{ backgroundColor: WARNING_COLOR }}
-                            className="px-6 py-2 text-white font-semibold rounded-md shadow-md hover:opacity-90 transition duration-150 text-sm">
-                            Limpar Campos
-                        </button>
-                        <button type="submit"
-                            style={{ backgroundColor: PRIMARY_COLOR }}
-                            className="px-8 py-2 text-white font-semibold rounded-md shadow-md hover:bg-green-800 transition duration-150 text-sm">
-                            Salvar
-                        </button>
-                    </div>
-
-                    {/* Rodapé interno (Texto do Projeto) */}
-                    <div className="mt-8 pt-4 text-xs text-gray-500 border-t border-gray-200 leading-relaxed">
-                        <p className="font-bold">&copy; AgroHub - Projeto Acadêmico 2025</p>
-                        <p className="mt-1">Este é um protótipo acadêmico...</p>
-                    </div>
-
-                </form>
-            </main>
-            
-            {/* RODAPÉ EXTERNO (Copyright Verde Escuro) */}
-            <footer style={{ backgroundColor: PRIMARY_COLOR, color: LIGHT_COLOR }} className="p-4 text-center text-xs mt-auto shadow-inner">
-                copyright AgroHub - 2025
-            </footer>
-        </div>
-    );
+      <Footer>
+        copyright AgroHub - 2025
+      </Footer>
+    </RegisterContainer>
+  );
 }
