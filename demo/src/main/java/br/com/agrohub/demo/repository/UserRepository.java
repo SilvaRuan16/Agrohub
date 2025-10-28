@@ -28,4 +28,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Método de segurança auxiliar: verificar se um CNPJ já existe no cadastro
     boolean existsByCnpj(String cnpj);
+
+    Optional<User> findByCpf(String cpf);
+    Optional<User> findByCnpj(String cnpj);
 }

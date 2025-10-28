@@ -130,8 +130,8 @@ export default function LoginScreen() {
     setLoading(true);
 
     const loginPayload = {
-      identifier: formData.cpfCnpj.replace(/\D/g, ''),
-      userType: formData.userType,
+      identifier: formData.cpfCnpj.replace(/\D/g, ''), // Envia só os dígitos
+      userType: formData.userType, // Envia 'cliente' ou 'empresa'
       password: formData.password,
     };
 
@@ -139,7 +139,20 @@ export default function LoginScreen() {
       const response = await axios.post(`${API_BASE_URL}/login`, loginPayload);
 
       console.log('Login bem-sucedido:', response.data);
-      navigate('/dashboard'); 
+
+      // --- CORREÇÃO DE ROTA AQUI ---
+      // O backend (AuthService.java) retorna "CLIENTE" ou "EMPRESA"
+      const userType = response.data.userType;
+
+      if (userType === 'CLIENTE') {
+        navigate('/client/dashboard'); // Rota do Cliente
+      } else if (userType === 'EMPRESA') {
+        navigate('/company/dashboard'); // Rota da Empresa
+      } else {
+        // Um fallback, caso algo mude
+        navigate('/');
+      }
+      // --- FIM DA CORREÇÃO ---
 
     } catch (err) {
       let errorMessage = 'Erro ao conectar com a API. Tente novamente.';
@@ -226,7 +239,7 @@ export default function LoginScreen() {
                 endAdornment: (
                   <Button
                     onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1} 
+                    tabIndex={-1}
                     aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
                     style={{ minWidth: 'auto', padding: '5px' }}
                   >
@@ -266,21 +279,21 @@ export default function LoginScreen() {
 
             <Box textAlign="center" marginTop="25px">
               <Typography variant="body2" style={{ color: '#555' }}>
-        Não possui uma conta?{' '}
-        <Button 
-            onClick={() => navigate('/register')} 
-            style={{ 
-                color: '#1a4314', 
-                textDecoration: 'none', 
-                fontWeight: 'bold', 
-                padding: '0 5px', // Ajusta o padding do botão
-                minWidth: 'auto',
-                textTransform: 'none' // Remove o texto em caixa alta padrão do Button
-            }}
-        >
-            Criar conta
-        </Button>
-    </Typography>
+                Não possui uma conta?{' '}
+                <Button
+                  onClick={() => navigate('/register')}
+                  style={{
+                    color: '#1a4314',
+                    textDecoration: 'none',
+                    fontWeight: 'bold',
+                    padding: '0 5px', // Ajusta o padding do botão
+                    minWidth: 'auto',
+                    textTransform: 'none' // Remove o texto em caixa alta padrão do Button
+                  }}
+                >
+                  Criar conta
+                </Button>
+              </Typography>
             </Box>
           </LoginFormContainer>
         </RightPanel>
@@ -289,10 +302,10 @@ export default function LoginScreen() {
       {/* Rodapé Global */}
       <Footer>
         <Typography variant="caption" display="block">
-            &copy; AgroHub - Projeto Acadêmico
+          &copy; AgroHub - Projeto Acadêmico
         </Typography>
         <Typography variant="caption" display="block" style={{ marginTop: '5px' }}>
-            copyright AgroHub - 2025
+          copyright AgroHub - 2025
         </Typography>
       </Footer>
     </GlobalContainer>

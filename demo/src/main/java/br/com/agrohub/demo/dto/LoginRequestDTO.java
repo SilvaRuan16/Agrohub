@@ -1,38 +1,41 @@
+// Arquivo: LoginRequestDTO.java
 package br.com.agrohub.demo.dto;
 
 import java.io.Serializable;
 
+// NOTA: Renomeei os campos para corresponder EXATAMENTE ao payload do seu React.
 public class LoginRequestDTO implements Serializable {
 
-    // O usuário pode logar com e-mail ou com CPF/CNPJ (dependendo da sua regra de negócio),
-    // mas o e-mail é o campo mais universal e foi a base do seu formulário.
-    private String email;
-    private String senha;
+    private String identifier; // Veio do JS
+    private String userType;   // Veio do JS
+    private String password;   // Veio do JS (Jackson vai mapear para setPassword)
 
     // Construtor padrão
     public LoginRequestDTO() {
     }
 
-    // Construtor com todos os campos
-    public LoginRequestDTO(String email, String senha) {
-        this.email = email;
-        this.senha = senha;
-    }
-
     // Getters e Setters
-    public String getEmail() {
-        return email;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
-    public String getSenha() {
-        return senha;
+    public String getUserType() {
+        return userType;
     }
 
-    public void setSenha(String senha) {
-        this.senha = senha;
+    public void setUserType(String userType) {
+        this.userType = userType;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

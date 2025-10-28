@@ -46,99 +46,88 @@ public class CompanyService {
     }
 
     /**
-     * Busca o perfil completo de uma empresa, incluindo seus dados, endereços e
-     * histórico de vendas.
-     * 
-     * @param companyId O ID da empresa.
-     * @return O DTO de resposta com todos os dados.
-     * @throws RuntimeException se a empresa não for encontrada.
+     * Registra uma nova empresa, limpando o CNPJ para salvar apenas dígitos.
      */
-
     @Transactional
-    public void registerCompany(CompanyRegisterRequestDTO requestDTO) {
+    public void registerCompany(CompanyRegisterRequestDTO requestDTO) { //
 
         // 1. Pré-validação de CNPJ e E-mail
-        String cnpj = requestDTO.getCnpj();
-        String email = requestDTO.getContact().getEmail();
+        
+        // O frontend (LoginScreen) envia o CNPJ sem formatação (só dígitos).
+        // Devemos garantir que o CNPJ seja salvo da mesma forma no registro.
+        
+        if (requestDTO.getCnpj() == null) { //
+            throw new ValidationException("O CNPJ é obrigatório.");
+        }
+        
+        // Remove todos os caracteres não numéricos (pontos, barras, traços)
+        String cnpj = requestDTO.getCnpj().replaceAll("\\D", ""); //
+        
+        String email = requestDTO.getContact().getEmail(); //
 
         if (!StringUtils.hasText(cnpj)) {
             throw new ValidationException("O CNPJ é obrigatório.");
         }
+        
+        // Agora ele verifica o CNPJ limpo (só dígitos)
         if (companyRepository.existsByCnpj(cnpj)) {
             throw new ValidationException("Empresa com CNPJ " + cnpj + " já registrada.");
         }
-        if (authSecurity.userExists(email)) {
+        if (authSecurity.userExists(email)) { //
             throw new ValidationException("Usuário com e-mail " + email + " já existe.");
         }
 
-        // 2. ✅ CORREÇÃO 1: Mapeamento e Persistência de Contato (usando o Mapper)
-        // Isso garante que todos os dados do ContatoDTO sejam mapeados, não só o email.
-        Contact contact = companyMapper.toContact(requestDTO.getContact());
-        contact = contactRepository.save(contact);
+        // 2. Mapeamento e Persistência de Contato (usando o Mapper)
+        Contact contact = companyMapper.toContact(requestDTO.getContact()); //
+        contact = contactRepository.save(contact); //
 
-        // 3. Registro do Novo Usuário no Módulo de Segurança
+        // 3. Registro do Novo Usuário no Módulo de Segurança (passando o CNPJ limpo)
         User newUser = authSecurity.registerNewUser(
                 email,
-                cnpj,
-                requestDTO.getSenha(),
-                UserType.EMPRESA);
+                cnpj, // Passa o CNPJ limpo (só dígitos)
+                requestDTO.getSenha(), //
+                UserType.EMPRESA); //
 
         // 4. Mapeamento e Configuração da Empresa
-        Company company = companyMapper.toCompanyEntity(requestDTO, newUser);
-        company.setUser(newUser);
-        company.setContact(contact);
+        Company company = companyMapper.toCompanyEntity(requestDTO, newUser); //
+        company.setUser(newUser); //
+        company.setContact(contact); //
 
-        // 5. Ajuste do CNPJ (limpeza de espaços)
-        if (company.getCnpj() != null) {
-            company.setCnpj(company.getCnpj().trim());
-        }
+        // 5. Ajuste do CNPJ (garantindo que o CNPJ limpo seja salvo)
+        // Garante que a entidade Company também salve o CNPJ limpo
+        company.setCnpj(cnpj); 
 
         // 6. Persistência da Empresa
-        companyRepository.save(company);
+        companyRepository.save(company); //
     }
 
-    public CompanyProfileResponseDTO getCompanyProfile(Long companyId) {
+    /**
+     * Busca o perfil completo de uma empresa, incluindo seus dados, endereços e
+     * histórico de vendas.
+     * * @param companyId O ID da empresa.
+     * @return O DTO de resposta com todos os dados.
+     * @throws RuntimeException se a empresa não for encontrada.
+     */
+    public CompanyProfileResponseDTO getCompanyProfile(Long companyId) { //
 
         // 1. Buscar a Entidade Principal (Company)
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada com o ID: " + companyId));
 
         // 2. Buscar Entidades Relacionadas: Histórico de Vendas (Pedidos)
-        // OBS: Empresas vendem, então o histórico de vendas são os pedidos onde a
-        // empresa é a vendedora.
-        // Assumindo que o PedidoRepository tem um método para buscar pedidos por ID da
-        // empresa do produto.
-        // A maneira mais simples é buscar todos os pedidos e filtrar/mapear. Usaremos
-        // um mock simples de pedidos
-        // ou você deve ter um método no PedidoRepository, como
-        // findByEmpresaId(companyId) ou similar.
-
-        // **MOCK TEMPORÁRIO** (Substitua por uma chamada real ao repositório se tiver o
-        // método)
-        List<Pedido> historicoVendas = pedidoRepository.findAll(); // MUDAR ISSO SE HOUVER MÉTODO CUSTOMIZADO
+        // (Lógica original mantida)
+        List<Pedido> historicoVendas = pedidoRepository.findAll(); //
 
         // 3. Buscar Entidades Relacionadas: Endereços
-        // Assumindo que a entidade Company tem um relacionamento OneToMany ou
-        // ManyToMany direto com Address (sem tabela de ligação como o cliente).
-        // OBS: Você deve ter um método no CompanyRepository ou um
-        // CompanyAddressRepository para buscar esses endereços.
-        // Usaremos o getEnderecos() da entidade Company como um placeholder que precisa
-        // ser implementado na Company.java
-
-        // **MOCK TEMPORÁRIO** (MUDAR ISSO se o mapeamento for diferente)
-        // O mapeamento mais comum é: Company tem List<Address> ou Company tem
-        // List<CompanyAddress>
-        List<Address> addresses = List.of(); // Assumindo que você pegaria isso de company.getEnderecos() ou um
-                                             // repositório
+        // (Lógica original mantida)
+        List<Address> addresses = List.of(); //
 
         // 4. Mapear para o DTO de Perfil
-        // O mapper lida com a conversão de User (dentro da Company) e o Histórico de
-        // Vendas
         return companyMapper.toCompanyProfileResponseDTO(
                 company.getUser(),
                 company,
                 historicoVendas,
-                addresses // Certifique-se de que CompanyMapper está esperando List<Address>
+                addresses
         );
     }
 }
