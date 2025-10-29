@@ -105,12 +105,12 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const getMask = (value) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length <= 11) {
-      return '999.999.999-99';
+  const getMask = (userType) => {
+    if (userType === 'empresa') {
+      return '99.999.999/9999-99'; // CNPJ
     }
-    return '99.999.999/9999-99';
+    // Assume que se for 'cliente' ou vazio, usa CPF por padrão
+    return '999.999.999-99'; // CPF
   };
 
   const handleChange = (event) => {
@@ -189,7 +189,7 @@ export default function LoginScreen() {
             {/* Campos do Formulário */}
             <FormControl fullWidth margin="normal" required>
               <InputMask
-                mask={getMask(formData.cpfCnpj)}
+                mask={getMask(formData.userType)} // <--- A MUDANÇA ESTÁ AQUI
                 value={formData.cpfCnpj}
                 onChange={handleChange}
                 name="cpfCnpj"

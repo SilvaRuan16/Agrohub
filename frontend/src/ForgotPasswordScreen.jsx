@@ -91,7 +91,10 @@ const AgroHubLogo = styled.div`
 
 // --- Constantes e Lógica (Inalteradas) ---
 
-const API_FORGOT_PASSWORD_URL = 'http://localhost:8080/api/v1/auth/forgot-password'; 
+// Mude no ForgotPasswordScreen.js:
+const API_FORGOT_PASSWORD_URL = 'http://localhost:8080/api/v1/auth/reset-password';
+//                                                           ^^^^^^^^^^^^^^^
+//                                                            CORRIGIDO AQUI
 
 export default function ForgotPasswordScreen() {
   const navigate = useNavigate();
@@ -105,12 +108,12 @@ export default function ForgotPasswordScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const getMask = (value) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length <= 11) {
-      return '999.999.999-99';
+  const getMask = (userType) => {
+    if (userType === 'empresa') {
+      return '99.999.999/9999-99'; // CNPJ
     }
-    return '99.999.999/9999-99';
+    // Assume que se for 'cliente' ou vazio, usa CPF por padrão
+    return '999.999.999-99'; // CPF
   };
 
   const handleChange = (event) => {
@@ -130,7 +133,7 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
 
     const resetPayload = {
-      identifier: formData.cpfCnpj.replace(/\D/g, ''), 
+      identifier: formData.cpfCnpj.replace(/\D/g, ''),
       userType: formData.userType,
       email: formData.email,
       newPassword: formData.newPassword,
@@ -141,8 +144,8 @@ export default function ForgotPasswordScreen() {
 
       console.log('Redefinição bem-sucedida:', response.data);
       alert('Sua senha foi redefinida com sucesso! Redirecionando para o Login.');
-      
-      navigate('/'); 
+
+      navigate('/');
 
     } catch (err) {
       let errorMessage = 'Erro ao se comunicar com o servidor. Tente novamente.';
@@ -179,7 +182,7 @@ export default function ForgotPasswordScreen() {
             {/* Campos do Formulário */}
             <FormControl fullWidth margin="normal" required>
               <InputMask
-                mask={getMask(formData.cpfCnpj)}
+                mask={getMask(formData.userType)} // <--- A MUDANÇA ESTÁ AQUI
                 value={formData.cpfCnpj}
                 onChange={handleChange}
                 name="cpfCnpj"
@@ -241,7 +244,7 @@ export default function ForgotPasswordScreen() {
                 endAdornment: (
                   <Button
                     onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1} 
+                    tabIndex={-1}
                     aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
                     style={{ minWidth: 'auto', padding: '5px' }}
                   >
@@ -265,7 +268,7 @@ export default function ForgotPasswordScreen() {
               style={{
                 marginTop: '30px',
                 padding: '10px 0',
-                backgroundColor: '#1a4314', 
+                backgroundColor: '#1a4314',
                 fontSize: '1rem',
               }}
             >
