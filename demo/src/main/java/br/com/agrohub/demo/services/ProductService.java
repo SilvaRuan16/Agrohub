@@ -4,6 +4,7 @@ import java.nio.file.AccessDeniedException; // Necessário para a exceção
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication; // Necessário para o método
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class ProductService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
 
+    @Autowired
     public ProductService(
             ProductRepository productRepository,
             ProductMapper productMapper,

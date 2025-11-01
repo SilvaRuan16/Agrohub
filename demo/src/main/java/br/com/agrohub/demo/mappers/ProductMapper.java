@@ -3,6 +3,7 @@ package br.com.agrohub.demo.mappers;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import br.com.agrohub.demo.dto.AddProductRequestDTO;
@@ -31,7 +32,7 @@ public class ProductMapper {
 
     // Você precisará de um CommonMapper (que não foi fornecido, mas é essencial
     // para mapear Endereço, Comentários, etc.)
-    public ProductMapper(CommonMapper commonMapper) {
+    public ProductMapper(@Lazy CommonMapper commonMapper) {
         this.commonMapper = commonMapper;
     }
 

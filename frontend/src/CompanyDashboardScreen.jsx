@@ -48,6 +48,9 @@ const Footer = styled(Box)`
     flex-shrink: 0;
 `;
 
+// --- Constante da API (CORREÇÃO) ---
+const API_BASE_URL = 'http://localhost:8080';
+
 // --- Componente Principal ---
 
 export default function CompanyDashboardScreen() {
@@ -77,8 +80,8 @@ export default function CompanyDashboardScreen() {
             try {
                 setIsLoading(true);
 
-                // 🎯 CORREÇÃO CRÍTICA: Envio do Token no Cabeçalho de Autorização
-                const response = await axios.get('/api/v1/companies/dashboard', {
+                // 🎯 CORREÇÃO FINAL: Usando a URL BASE + o PATH exato do controller
+                const response = await axios.get(`${API_BASE_URL}/api/v1/companies/dashboard`, {
                     headers: {
                         Authorization: `Bearer ${authToken}` // Enviando o JWT
                     }
@@ -98,7 +101,7 @@ export default function CompanyDashboardScreen() {
                         localStorage.removeItem('userType');
                         errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
                     } else if (err.response.status === 403) {
-                        // Permissão negada (ex: CLIENTE tentando acessar)
+                        // Permissão negada
                         errorMessage = 'Acesso negado. Você não tem permissão para esta rota.';
                     } else if (err.response.data && err.response.data.message) {
                         errorMessage = err.response.data.message;
@@ -114,10 +117,10 @@ export default function CompanyDashboardScreen() {
         };
 
         fetchCompanyProducts();
-    }, [navigate]); // Mantido 'navigate' nas dependências, embora não esteja mais sendo usado no `useEffect`
+    }, [navigate]); // Mantido 'navigate' nas dependências
 
     const handleAddProduct = () => {
-        navigate('/add-product');
+        navigate('/company/add-product');
     };
 
     // FUNÇÃO DE RENDERIZAÇÃO DE UM ÚNICO PRODUTO
@@ -213,7 +216,7 @@ export default function CompanyDashboardScreen() {
                     <Alert severity="error">{error}</Alert>
                     <Button
                         variant="outlined"
-                        onClick={() => navigate('/login')} // 🎯 Agora redireciona para o login
+                        onClick={() => navigate('/login')} // Agora redireciona para o login
                         style={{ marginTop: '15px' }}
                     >
                         TENTAR NOVAMENTE (OU VÁ PARA OUTRA TELA)

@@ -50,8 +50,8 @@ public class SecurityConfig {
                         // Rotas Públicas (Catálogo de Produtos)
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
 
-                        // ROTA DO DASHBOARD DA EMPRESA: EXIGE AUTENTICAÇÃO (TOKEN)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/companies/dashboard").authenticated()
+                        // 🎯 CORREÇÃO: A rota exige a ROLE ESPECÍFICA 'EMPRESA'
+                        .requestMatchers(HttpMethod.GET, "/api/v1/companies/dashboard").hasRole("EMPRESA")
 
                         // Qualquer outra requisição deve ser autenticada
                         .anyRequest().authenticated());
