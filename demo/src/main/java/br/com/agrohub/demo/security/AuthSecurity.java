@@ -1,83 +1,63 @@
 package br.com.agrohub.demo.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy; // 👈 IMPORT ADICIONADO
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.agrohub.demo.dto.TokenResponseDTO;
 import br.com.agrohub.demo.models.User;
 import br.com.agrohub.demo.models.UserType;
 import br.com.agrohub.demo.repository.UserRepository;
-import br.com.agrohub.demo.security.jwt.JwtTokenProvider;
 import jakarta.transaction.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class AuthSecurity implements UserDetailsService {
 
-    // Não é final, pois será injetado via setter
-    private AuthenticationManager authenticationManager;
-
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider tokenProvider;
+    private final PasswordEncoder passwordEncoder; // Mantido para o método registerNewUser
 
-    // Construtor sem AuthenticationManager (para quebrar o ciclo inicial)
-    public AuthSecurity(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            JwtTokenProvider tokenProvider) {
+    // Construtor limpo: injeta apenas as dependências necessárias para
+    // carregar/salvar usuários.
+    public AuthSecurity(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.tokenProvider = tokenProvider;
-    }
-
-    // 🎯 Setter com @Lazy: Resolve o último ciclo de dependência (AuthSecurity <->
-    // AuthenticationManager)
-    @Autowired
-    @Lazy // 👈 CHAVE PARA RESOLVER O CICLO
-    public void setAuthenticationManager(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
     }
 
     /**
-     * Processa a autenticação do usuário e retorna o token JWT.
+     * loadUserByUsername: O CORAÇÃO DO LOGIN.
+     * O Spring Security (AuthenticationManager) chama este método com o identifier.
+     * 
+     * @param identifier O CPF, CNPJ ou Email fornecido na tela de login.
+     * @return Uma instância de CustomUserDetails.
      */
-    public TokenResponseDTO authenticateUser(String username, String password) {
-        // O AuthenticationManager é usado aqui.
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Gera o token a partir do objeto Authentication
-        String jwt = tokenProvider.generateToken(authentication);
-
-        // Carrega o usuário para obter o tipo
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
-
-        return TokenResponseDTO.builder()
-                .token(jwt)
-                .userType(user.getTipoUsuario().name())
-                .build();
-    }
-
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
+    @Transactional
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        // 1. Tenta buscar o usuário por diferentes campos
+        Optional<User> userOptional = Optional.empty();
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getSenha())
-                .roles(user.getTipoUsuario().name())
-                .build();
+        // Tentamos buscar por e-mail
+        userOptional = userRepository.findByEmail(identifier);
+
+        // Se não for e-mail, tentamos CPF (se o tamanho for compatível)
+        if (userOptional.isEmpty() && identifier.length() <= 11) {
+            userOptional = userRepository.findByCpf(identifier);
+        }
+        // Se não for e-mail nem CPF, tentamos CNPJ (se o tamanho for compatível)
+        else if (userOptional.isEmpty() && identifier.length() > 11) {
+            userOptional = userRepository.findByCnpj(identifier);
+        }
+
+        // Se o usuário não for encontrado
+        User user = userOptional
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + identifier));
+
+        // 2. Retorna o objeto CustomUserDetails, que o Spring usará para comparar a
+        // senha.
+        return new CustomUserDetails(user);
     }
 
     public boolean userExists(String email) {
@@ -98,6 +78,7 @@ public class AuthSecurity implements UserDetailsService {
 
         user.setTipoUsuario(userType);
 
+        // HASH da senha
         user.setSenha(passwordEncoder.encode(rawPassword));
 
         return userRepository.save(user);

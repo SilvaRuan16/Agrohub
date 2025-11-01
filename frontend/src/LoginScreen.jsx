@@ -1,10 +1,10 @@
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
-import axios from 'axios';
-import { useState } from 'react';
-import InputMask from 'react-input-mask';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Typography, Box, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import InputMask from 'react-input-mask';
 import styled from 'styled-components';
+import axios from 'axios';
 
 // --- Styled Components ---
 
@@ -79,7 +79,6 @@ const Footer = styled(Box)`
 const AgroHubLogo = styled.div`
   width: 200px;
   height: auto;
-  /* Simulação da Logo */
   img {
     max-width: 100%;
     height: auto;
@@ -127,7 +126,7 @@ export default function LoginScreen() {
 
     const loginPayload = {
       identifier: formData.cpfCnpj.replace(/\D/g, ''), // Envia só os dígitos
-      userType: formData.userType, // Envia 'cliente' ou 'empresa'
+      userType: formData.userType.toUpperCase(), // Converte para MAIÚSCULAS
       password: formData.password,
     };
 
@@ -136,19 +135,23 @@ export default function LoginScreen() {
 
       console.log('Login bem-sucedido:', response.data);
 
-      // 🎯 CORREÇÃO CRÍTICA: ARMAZENAMENTO DO TOKEN E USER TYPE
+      // --- LÓGICA DE NAVEGAÇÃO CORRIGIDA ---
+
+      const rawUserType = response.data.userType || '';
+
+      // Normalização: remove ROLE_ e garante MAIÚSCULA
+      const normalizedUserType = rawUserType.toUpperCase().replace('ROLE_', '');
+
+      // ARMAZENAMENTO DO TOKEN E USER TYPE (usando o valor normalizado)
       localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('userType', response.data.userType); // CLIENTE ou EMPRESA
-      // ------------------------------------
+      localStorage.setItem('userType', normalizedUserType);
 
-      const userType = response.data.userType;
-
-      if (userType === 'CLIENTE') {
+      if (normalizedUserType === 'CLIENTE') {
         navigate('/client/dashboard'); // Rota do Cliente
-      } else if (userType === 'EMPRESA') {
+      } else if (normalizedUserType === 'EMPRESA') {
         navigate('/company/dashboard'); // Rota da Empresa
       } else {
-        // Um fallback
+        console.warn('Tipo de usuário desconhecido:', normalizedUserType);
         navigate('/');
       }
 

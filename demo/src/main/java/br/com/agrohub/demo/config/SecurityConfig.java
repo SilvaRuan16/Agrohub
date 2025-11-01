@@ -2,9 +2,10 @@ package br.com.agrohub.demo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy; // 👈 NOVO IMPORT
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer; // 👈 1. IMPORT ADICIONADO
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,11 +24,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    /**
-     * CONSTRUTOR CORRIGIDO:
-     * O @Lazy instrui o Spring a criar um proxy para este bean, quebrando o ciclo
-     * de dependência com o AuthenticationManager/AuthSecurity.
-     */
     public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -37,9 +33,15 @@ public class SecurityConfig {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                // 🎯 2. CORREÇÃO CORS: Habilita o CORS no nível do Spring Security
+                .cors(Customizer.withDefaults())
+
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // 🎯 3. CORREÇÃO CORS: Permite requisições OPTIONS (Preflight)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Rotas Públicas (Login e Registro)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
@@ -48,7 +50,7 @@ public class SecurityConfig {
                         // Rotas Públicas (Catálogo de Produtos)
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
 
-                        // ROTA DO DASHBOARD DA EMPRESA: AGORA EXIGE AUTENTICAÇÃO (TOKEN)
+                        // ROTA DO DASHBOARD DA EMPRESA: EXIGE AUTENTICAÇÃO (TOKEN)
                         .requestMatchers(HttpMethod.GET, "/api/v1/companies/dashboard").authenticated()
 
                         // Qualquer outra requisição deve ser autenticada
@@ -66,10 +68,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Expõe o AuthenticationManager como um Bean para que possa ser usado no
-     * AuthSecurity.
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
