@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { Alert, Box, Button, CircularProgress, Divider, Grid, Paper, Typography } from '@mui/material';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, Paper, Grid, Divider, CircularProgress, Alert } from '@mui/material';
 import styled from 'styled-components';
 import CompanyHeader from './CompanyHeader';
-import axios from 'axios';
 
 // --- Styled Components ---
 
@@ -62,18 +62,29 @@ export default function CompanyDashboardScreen() {
     useEffect(() => {
         const fetchCompanyProducts = async () => {
 
-            // 🛑 REMOVIDO: Toda a lógica de verificação de 'authToken' foi removida.
-            // O componente tentará carregar os dados diretamente.
+            // 1. OBTÉM O TOKEN E O TIPO DE USUÁRIO (Cliente ou Empresa)
+            const authToken = localStorage.getItem('authToken');
+            const userType = localStorage.getItem('userType');
+
+            // 2. VERIFICA AUTENTICAÇÃO E TIPO DE USUÁRIO
+            if (!authToken || userType !== 'EMPRESA') {
+                // Se não há token ou se o token é de um CLIENTE tentando acessar o dashboard de EMPRESA
+                setError('Acesso não autorizado. Por favor, faça login com a conta correta.');
+                setIsLoading(false);
+                return;
+            }
 
             try {
                 setIsLoading(true);
 
-                // 🛑 ALTERADO: A chamada agora não inclui o header de Autorização.
-                // O endpoint foi ajustado para um endpoint mock ou público, ou
-                // a segurança no backend deve ser ajustada para permitir acesso sem token.
-                const response = await axios.get('/api/v1/companies/dashboard');
+                // 🎯 CORREÇÃO CRÍTICA: Envio do Token no Cabeçalho de Autorização
+                const response = await axios.get('/api/v1/companies/dashboard', {
+                    headers: {
+                        Authorization: `Bearer ${authToken}` // Enviando o JWT
+                    }
+                });
 
-                setProducts(response.data); // Armazena os produtos no estado
+                setProducts(response.data);
                 setError(null);
 
             } catch (err) {
@@ -81,12 +92,14 @@ export default function CompanyDashboardScreen() {
                 let errorMessage = 'Falha ao buscar produtos.';
 
                 if (err.response) {
-                    // Erro retornado pelo backend (tratamento de erros genérico mantido)
-                    if (err.response.status === 403) {
+                    if (err.response.status === 401) {
+                        // Token rejeitado (inválido ou expirado). Limpa a sessão e notifica o usuário.
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userType');
+                        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+                    } else if (err.response.status === 403) {
+                        // Permissão negada (ex: CLIENTE tentando acessar)
                         errorMessage = 'Acesso negado. Você não tem permissão para esta rota.';
-                    } else if (err.response.status === 401) {
-                        // O erro 401 ainda pode ocorrer se o backend exigir autenticação
-                        errorMessage = 'Acesso não autorizado. (Verifique o backend)';
                     } else if (err.response.data && err.response.data.message) {
                         errorMessage = err.response.data.message;
                     } else {
@@ -131,7 +144,6 @@ export default function CompanyDashboardScreen() {
                         />
                     </Box>
                     <Typography variant="h6" style={{ marginTop: '10px' }}>
-                        {/* Usando o novo campo codigoInterno (ou ID como fallback) */}
                         Código: {product.codigoInterno || product.id}
                     </Typography>
                 </Grid>
@@ -148,7 +160,6 @@ export default function CompanyDashboardScreen() {
                         </Box>
                         <Box>
                             <Typography variant="body2" color="textSecondary">Margem de lucro (%)</Typography>
-                            {/* Usando o novo campo margemLucro */}
                             <Typography variant="body1">{product.margemLucro ? `${Number(product.margemLucro).toFixed(2)}%` : 'N/A'}</Typography>
                         </Box>
                         <Box>
@@ -167,7 +178,6 @@ export default function CompanyDashboardScreen() {
 
                     <Typography variant="body2" color="textSecondary">Descrição do Produto</Typography>
                     <Typography variant="body1" sx={{ mt: 1 }}>
-                        {/* Usando o campo descricao ou detalhes */}
                         {product.descricao || product.detalhes || 'Sem descrição.'}
                     </Typography>
 
@@ -197,20 +207,16 @@ export default function CompanyDashboardScreen() {
             );
         }
 
-        // 🛑 ALTERADO: A seção de erro de autenticação (redirecionamento para /login) 
-        // foi removida ou simplificada.
         if (error) {
             return (
                 <EmptyStateContainer>
                     <Alert severity="error">{error}</Alert>
-                    {/* Botão de login mantido para simular que o erro pode ser resolvido por login, mas sem forçar o redirecionamento */}
                     <Button
                         variant="outlined"
-                        // 🛑 REMOVIDO: Mudado de navigate('/login') para apenas um console.log ou outra ação, já que a lógica de autenticação foi removida.
-                        onClick={() => console.log('Ação de login/autenticação removida.')}
+                        onClick={() => navigate('/login')} // 🎯 Agora redireciona para o login
                         style={{ marginTop: '15px' }}
                     >
-                        Tentar novamente (Ou vá para outra tela)
+                        TENTAR NOVAMENTE (OU VÁ PARA OUTRA TELA)
                     </Button>
                 </EmptyStateContainer>
             );

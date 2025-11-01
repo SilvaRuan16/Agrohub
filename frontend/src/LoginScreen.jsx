@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Typography, Box, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import InputMask from 'react-input-mask';
-import styled from 'styled-components';
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import axios from 'axios';
+import { useState } from 'react';
+import InputMask from 'react-input-mask';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-// --- Styled Components CORRIGIDOS ---
+// --- Styled Components ---
 
 const GlobalContainer = styled(Box)`
   display: flex;
@@ -17,8 +17,7 @@ const GlobalContainer = styled(Box)`
 
 const ContentArea = styled(Box)`
   display: flex;
-  flex-grow: 1; /* Permite que ocupe todo o espaço restante */
-  /* Remove a altura fixa para evitar conflitos */
+  flex-grow: 1;
   
   @media (max-width: 900px) {
     flex-direction: column;
@@ -34,7 +33,6 @@ const LeftPanel = styled(Box)`
   align-items: center;
   background-color: #fcfcfc;
   padding: 40px;
-  /* Garante que o painel esquerdo ocupe a altura total do ContentArea */
   min-height: 100%; 
 
   @media (max-width: 900px) {
@@ -52,7 +50,6 @@ const RightPanel = styled(Box)`
   align-items: center;
   padding: 40px 20px;
   background-color: #ffffff;
-  /* Garante que o painel direito ocupe a altura total do ContentArea */
   min-height: 100%; 
 
   @media (max-width: 900px) {
@@ -76,7 +73,6 @@ const Footer = styled(Box)`
   padding: 30px 40px;
   font-size: 0.8rem;
   text-align: center;
-  /* Garante que o footer tenha sempre a mesma altura para o cálculo do ContentArea */
   flex-shrink: 0;
 `;
 
@@ -90,7 +86,7 @@ const AgroHubLogo = styled.div`
   }
 `;
 
-// --- Constantes e Lógica (Inalteradas) ---
+// --- Constantes e Lógica ---
 
 const API_BASE_URL = 'http://localhost:8080/api/v1/auth';
 
@@ -140,8 +136,11 @@ export default function LoginScreen() {
 
       console.log('Login bem-sucedido:', response.data);
 
-      // --- CORREÇÃO DE ROTA AQUI ---
-      // O backend (AuthService.java) retorna "CLIENTE" ou "EMPRESA"
+      // 🎯 CORREÇÃO CRÍTICA: ARMAZENAMENTO DO TOKEN E USER TYPE
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('userType', response.data.userType); // CLIENTE ou EMPRESA
+      // ------------------------------------
+
       const userType = response.data.userType;
 
       if (userType === 'CLIENTE') {
@@ -149,10 +148,9 @@ export default function LoginScreen() {
       } else if (userType === 'EMPRESA') {
         navigate('/company/dashboard'); // Rota da Empresa
       } else {
-        // Um fallback, caso algo mude
+        // Um fallback
         navigate('/');
       }
-      // --- FIM DA CORREÇÃO ---
 
     } catch (err) {
       let errorMessage = 'Erro ao conectar com a API. Tente novamente.';
@@ -189,7 +187,7 @@ export default function LoginScreen() {
             {/* Campos do Formulário */}
             <FormControl fullWidth margin="normal" required>
               <InputMask
-                mask={getMask(formData.userType)} // <--- A MUDANÇA ESTÁ AQUI
+                mask={getMask(formData.userType)}
                 value={formData.cpfCnpj}
                 onChange={handleChange}
                 name="cpfCnpj"
@@ -286,9 +284,9 @@ export default function LoginScreen() {
                     color: '#1a4314',
                     textDecoration: 'none',
                     fontWeight: 'bold',
-                    padding: '0 5px', // Ajusta o padding do botão
+                    padding: '0 5px',
                     minWidth: 'auto',
-                    textTransform: 'none' // Remove o texto em caixa alta padrão do Button
+                    textTransform: 'none'
                   }}
                 >
                   Criar conta
