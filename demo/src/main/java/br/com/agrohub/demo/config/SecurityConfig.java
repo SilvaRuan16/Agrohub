@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer; // 👈 1. IMPORT ADICIONADO
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,30 +33,29 @@ public class SecurityConfig {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // 🎯 2. CORREÇÃO CORS: Habilita o CORS no nível do Spring Security
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(Customizer.withDefaults())
-
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🎯 3. CORREÇÃO CORS: Permite requisições OPTIONS (Preflight)
+                        // 1. Permite requisições OPTIONS (Preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Rotas Públicas (Login e Registro)
+                        // 2. Rotas Públicas (Login e Registro)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/companies/register").permitAll()
 
-                        // Rotas Públicas (Catálogo de Produtos)
+                        // 3. Rotas Públicas (Catálogo de Produtos - Leitura)
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
 
-                        // 🎯 CORREÇÃO: A rota exige a ROLE ESPECÍFICA 'EMPRESA'
+                        // 🟢 REGRA CRÍTICA: Permite POST /api/v1/products APENAS para EMPRESA
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("EMPRESA") // <--- ESTA É A LINHA
+
+                        // 4. Acesso ao Dashboard (Apenas GET para EMPRESA)
                         .requestMatchers(HttpMethod.GET, "/api/v1/companies/dashboard").hasRole("EMPRESA")
 
-                        // Qualquer outra requisição deve ser autenticada
+                        // 5. Qualquer outra requisição deve ser autenticada
                         .anyRequest().authenticated());
 
-        // INCLUI O FILTRO JWT NA CADEIA DE SEGURANÇA
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

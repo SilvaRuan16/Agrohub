@@ -1,5 +1,6 @@
 package br.com.agrohub.demo.security;
 
+import org.springframework.security.core.Authentication; // NOVO IMPORT NECESSÁRIO
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,10 +18,8 @@ import java.util.Optional;
 public class AuthSecurity implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // Mantido para o método registerNewUser
+    private final PasswordEncoder passwordEncoder; 
 
-    // Construtor limpo: injeta apenas as dependências necessárias para
-    // carregar/salvar usuários.
     public AuthSecurity(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -29,8 +28,7 @@ public class AuthSecurity implements UserDetailsService {
     /**
      * loadUserByUsername: O CORAÇÃO DO LOGIN.
      * O Spring Security (AuthenticationManager) chama este método com o identifier.
-     * 
-     * @param identifier O CPF, CNPJ ou Email fornecido na tela de login.
+     * * @param identifier O CPF, CNPJ ou Email fornecido na tela de login.
      * @return Uma instância de CustomUserDetails.
      */
     @Override
@@ -82,5 +80,38 @@ public class AuthSecurity implements UserDetailsService {
         user.setSenha(passwordEncoder.encode(rawPassword));
 
         return userRepository.save(user);
+    }
+    
+    /**
+     * Extrai o ID do usuário (Primary Key Long) a partir do objeto Authentication.
+     * É usado por serviços que precisam saber o ID do usuário logado (ex: ProductService).
+     * @param authentication Objeto de autenticação do Spring Security.
+     * @return ID do Usuário (Long).
+     */
+    public Long getLoggedInUserId(Authentication authentication) {
+        // O getName() retorna o Username configurado no CustomUserDetails (Email, CPF ou CNPJ)
+        String identifier = authentication.getName();
+        
+        // 1. Tenta buscar o usuário por diferentes campos, usando a mesma lógica do loadUserByUsername
+        Optional<User> userOptional = Optional.empty();
+
+        // Tentamos buscar por e-mail
+        userOptional = userRepository.findByEmail(identifier);
+
+        // Se não for e-mail, tentamos CPF (se o tamanho for compatível)
+        if (userOptional.isEmpty() && identifier.length() <= 11) {
+            userOptional = userRepository.findByCpf(identifier);
+        }
+        // Se não for e-mail nem CPF, tentamos CNPJ (se o tamanho for compatível)
+        else if (userOptional.isEmpty() && identifier.length() > 11) {
+            userOptional = userRepository.findByCnpj(identifier);
+        }
+        
+        // Se o usuário não for encontrado (geralmente não deve acontecer para um usuário logado)
+        User user = userOptional
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário logado não encontrado."));
+        
+        // Retorna o ID
+        return user.getId();
     }
 }

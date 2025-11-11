@@ -3,18 +3,23 @@ package br.com.agrohub.demo.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.agrohub.demo.dto.AddProductRequestDTO;
 import br.com.agrohub.demo.dto.ProductCardResponseDTO;
 import br.com.agrohub.demo.services.ProductService;
+import jakarta.validation.Valid;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException; // Novo Import
 
 /**
- * Controller responsável pela exposição de produtos para o Cliente.
- * Roteia as requisições das telas ClientDashboardScreen.jsx e ClientProductDetailScreen.jsx.
- * OBS: Rotas para cadastro/edição ficam no CompanyController.
+ * Controller responsável pela exposição de produtos.
  */
 @RestController
 @RequestMapping("/api/v1/products")
@@ -27,34 +32,42 @@ public class ProductController {
     }
 
     /**
+     * Endpoint: POST /api/v1/products
+     * Rota para uma empresa adicionar um novo produto. Requer ROLE_EMPRESA.
+     */
+    @PostMapping
+    public ResponseEntity<Void> addProduct(
+            @Valid @RequestBody AddProductRequestDTO requestDTO,
+            Authentication authentication) {
+        try {
+            productService.addProduct(requestDTO, authentication);
+            return ResponseEntity.status(201).build(); // 201 Created
+        } catch (EntityNotFoundException | UsernameNotFoundException e) {
+            // Se o usuário ou empresa não for encontrado (geralmente 404)
+            return ResponseEntity.status(404).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 500 para qualquer outro erro interno não esperado
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
      * Endpoint: GET /api/v1/products
-     * Busca todos os produtos ativos e retorna no formato Card.
-     * Alimenta a lista principal do ClientDashboardScreen.jsx.
      */
     @GetMapping
     public ResponseEntity<List<ProductCardResponseDTO>> getAllActiveProducts() {
-        // A lógica de busca e mapeamento está no Service
         List<ProductCardResponseDTO> products = productService.findAllActiveProductsCard();
         return ResponseEntity.ok(products);
     }
 
     /**
      * Endpoint: GET /api/v1/products/{id}
-     * Busca um único produto ativo pelo ID no formato Card.
-     * Pode ser usado para a tela de detalhes ou ao clicar no card.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ProductCardResponseDTO> getProductById(@PathVariable Long id) {
-        // A lógica de busca, filtro de ativo e mapeamento está no Service
+        // Assume que EntityNotFoundException será lançada pelo Service se não encontrar
         ProductCardResponseDTO product = productService.findProductCardById(id);
         return ResponseEntity.ok(product);
     }
-
-    // Você pode adicionar um endpoint de busca com filtros e paginação aqui:
-    /*
-    @GetMapping("/search")
-    public ResponseEntity<List<ProductCardResponseDTO>> searchProducts(@RequestParam String query) {
-        // ...
-    }
-    */
 }

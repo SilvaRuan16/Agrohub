@@ -1,7 +1,7 @@
 package br.com.agrohub.demo.mappers;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors; // <-- Import já existente, necessário para o novo método
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -26,12 +26,8 @@ import br.com.agrohub.demo.models.ProductType;
 @Component
 public class ProductMapper {
 
-    // Se CommonMapper não existe, o projeto não irá compilar.
-    // Presumindo que ele exista, mas com métodos incorretos ou ausentes.
     private final CommonMapper commonMapper;
 
-    // Você precisará de um CommonMapper (que não foi fornecido, mas é essencial
-    // para mapear Endereço, Comentários, etc.)
     public ProductMapper(@Lazy CommonMapper commonMapper) {
         this.commonMapper = commonMapper;
     }
@@ -40,8 +36,7 @@ public class ProductMapper {
      * Mapeia a entidade Product para o DTO de Detalhe (usado para o Dashboard da
      * Empresa).
      * * @param product Entidade Produto completa.
-     * 
-     * @return ProductDetailResponseDTO.
+     * * @return ProductDetailResponseDTO.
      */
     public ProductDetailResponseDTO toProductDetailDTO(Product product) {
         ProductDetailResponseDTO dto = new ProductDetailResponseDTO();
@@ -68,8 +63,6 @@ public class ProductMapper {
         // 3. DESCONTO
         Discount discount = product.getDiscount();
         if (discount != null) {
-            // CORREÇÃO: Converte BigDecimal para Double, resolvendo a incompatibilidade de
-            // tipos (e usando getPercentual())
             dto.setDescontoMaximo(discount.getPercentual().doubleValue());
         }
 
@@ -77,7 +70,6 @@ public class ProductMapper {
         dto.setRatingMedio(4.5);
         dto.setTotalAvaliacoes(50);
 
-        // CORREÇÃO: Bloco de Mapeamento de comentários REATIVADO
         List<ComentarioDTO> comentariosDTO = product.getComments().stream()
                 .map(commonMapper::toComentarioDTO)
                 .collect(Collectors.toList());
@@ -101,37 +93,50 @@ public class ProductMapper {
             if (productType != null) {
                 dto.setTipoProduto(productType.getTipo());
             }
-
-            // Mapeamento de endereço do produtor (Assumindo que está no CommonMapper)
-            // dto.setEnderecoProdutor(commonMapper.toEnderecoDTO(info.getAddress()));
         }
 
         return dto;
+    }
+
+    // =========================================================================
+    // 🎯 NOVO MÉTODO ADICIONADO (Para corrigir os erros de teste)
+    // =========================================================================
+
+    /**
+     * Mapeia uma lista de entidades Product para uma lista de DTOs de Detalhe.
+     * 
+     * @param products Lista de entidades Produto.
+     * @return Lista de ProductDetailResponseDTO.
+     */
+    public List<ProductDetailResponseDTO> toProductDetailDTOList(List<Product> products) {
+        if (products == null) {
+            return List.of(); // Retorna lista vazia se a entrada for nula
+        }
+        return products.stream()
+                .map(this::toProductDetailDTO) // Reutiliza o método de mapeamento individual
+                .collect(Collectors.toList());
     }
 
     /**
      * Mapeia a entidade Product para o DTO de Card (usado para o Dashboard do
      * Cliente).
      * * @param product Entidade Produto.
-     * 
-     * @return ProductCardResponseDTO.
+     * * @return ProductCardResponseDTO.
      */
     public ProductCardResponseDTO toProductCardDTO(Product product) {
-        // ... (seu código existente para toProductCardDTO)
-        // [CÓDIGO OMITIDO POR SER INALTERADO]
+        // [Mantenha seu código original aqui]
         return new ProductCardResponseDTO(); // Placeholder
     }
 
     /**
      * Mapeia o DTO de Requisição para a Entidade Product.
      * * @param dto     AddProductRequestDTO.
+     * * @param company Empresa associada.
      * 
-     * @param company Empresa associada.
      * @return Entidade Product.
      */
     public Product toProductEntity(AddProductRequestDTO dto, Company company) {
-        // ... (seu código existente para toProductEntity)
-        // [CÓDIGO OMITIDO POR SER INALTERADO]
+        // [Mantenha seu código original aqui]
         Product product = new Product();
         product.setCompany(company);
         product.setNome(dto.getName());
@@ -139,6 +144,4 @@ public class ProductMapper {
         // ... set outros campos
         return product; // Placeholder
     }
-
-    // ... (Outros métodos do mapper, se houver)
 }

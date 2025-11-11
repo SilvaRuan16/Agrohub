@@ -1,13 +1,12 @@
-// JwtAuthenticationFilter.java 
-
 package br.com.agrohub.demo.security.jwt;
 
 import java.io.IOException;
+import java.util.Collection;
 
-import org.springframework.lang.NonNull; // 👈 1. NOVO IMPORT ADICIONADO AQUI
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -22,6 +21,8 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    // O UserDetailsService é mantido, mas não é usado no fluxo de autenticação via
+    // token
     private final UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, UserDetailsService userDetailsService) {
@@ -31,29 +32,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request, // 👈 2. ANOTAÇÃO ADICIONADA AQUI
-            @NonNull HttpServletResponse response, // 👈 3. ANOTAÇÃO ADICIONADA AQUI
-            @NonNull FilterChain filterChain // 👈 4. ANOTAÇÃO ADICIONADA AQUI
-    ) throws ServletException, IOException {
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
 
         try {
-            // 1. EXTRAI O JWT DO CABEÇALHO 'Authorization'
             String jwt = getJwtFromRequest(request);
 
             if (jwt != null && tokenProvider.validateToken(jwt)) {
 
-                // 2. O TOKEN É VÁLIDO: EXTRAI O EMAIL
+                // EXTRAI O EMAIL/IDENTIFICADOR E AS PERMISSÕES (ROLES) DIRETAMENTE DO TOKEN
                 String username = tokenProvider.getUsernameFromToken(jwt);
+                Collection<? extends GrantedAuthority> authorities = tokenProvider.getAuthoritiesFromToken(jwt);
 
-                // 3. CARREGA O USUÁRIO E CRIA O OBJETO DE AUTENTICAÇÃO
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
+                // CRIA O OBJETO DE AUTENTICAÇÃO USANDO O NOME E AS AUTORIDADES DO TOKEN
+                // A senha (credentials) é nula, pois a autenticação já foi feita
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                        username,
+                        null,
+                        authorities); // <--- CORREÇÃO AQUI
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // 4. DEFINE A AUTENTICAÇÃO NO CONTEXTO DO SPRING SECURITY
+                // DEFINE A AUTENTICAÇÃO NO CONTEXTO DO SPRING SECURITY
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
@@ -65,7 +67,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        // Verifica se o cabeçalho existe e se começa com "Bearer "
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }

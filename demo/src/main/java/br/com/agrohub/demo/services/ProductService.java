@@ -1,24 +1,25 @@
 package br.com.agrohub.demo.services;
 
-import java.nio.file.AccessDeniedException; // Necessário para a exceção
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication; // Necessário para o método
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import br.com.agrohub.demo.dto.AddProductRequestDTO;
 import br.com.agrohub.demo.dto.ProductCardResponseDTO;
-import br.com.agrohub.demo.dto.ProductDetailResponseDTO; // Necessário para o DTO de retorno
+import br.com.agrohub.demo.dto.ProductDetailResponseDTO; // Importe o DTO de Detalhe
 import br.com.agrohub.demo.mappers.ProductMapper;
 import br.com.agrohub.demo.models.Company;
 import br.com.agrohub.demo.models.Product;
 import br.com.agrohub.demo.models.User;
-import br.com.agrohub.demo.models.UserType; // Necessário para verificação do tipo de usuário
-import br.com.agrohub.demo.repository.CompanyRepository; // Novo Repositório
+import br.com.agrohub.demo.models.UserType;
+import br.com.agrohub.demo.repository.CompanyRepository;
 import br.com.agrohub.demo.repository.ProductRepository;
-import br.com.agrohub.demo.repository.UserRepository; // Novo Repositório
+import br.com.agrohub.demo.repository.UserRepository;
+import br.com.agrohub.demo.security.AuthSecurity;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
@@ -27,102 +28,109 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class ProductService {
 
-    private final ProductRepository productRepository;
-    private final ProductMapper productMapper;
-    private final UserRepository userRepository;
-    private final CompanyRepository companyRepository;
+        private final ProductRepository productRepository;
+        private final ProductMapper productMapper;
+        private final UserRepository userRepository;
+        private final CompanyRepository companyRepository;
+        private final AuthSecurity authSecurity;
 
-    @Autowired
-    public ProductService(
-            ProductRepository productRepository,
-            ProductMapper productMapper,
-            UserRepository userRepository,
-            CompanyRepository companyRepository) {
-        this.productRepository = productRepository;
-        this.productMapper = productMapper;
-        this.userRepository = userRepository;
-        this.companyRepository = companyRepository;
-    }
-
-    /**
-     * Retorna todos os produtos ATIVOS no catálogo, mapeados para o formato de
-     * Card.
-     * Esta é a lógica que alimenta o ClientDashboardScreen.jsx.
-     * 
-     * @return List<ProductCardResponseDTO>
-     */
-    public List<ProductCardResponseDTO> findAllActiveProductsCard() {
-        // 1. Busca todos os produtos ativos usando o método definido no Repository
-        List<Product> activeProducts = productRepository.findByActiveTrue();
-
-        if (activeProducts.isEmpty()) {
-            return List.of();
+        // Construtor
+        public ProductService(
+                        ProductRepository productRepository,
+                        ProductMapper productMapper,
+                        UserRepository userRepository,
+                        CompanyRepository companyRepository,
+                        AuthSecurity authSecurity) {
+                this.productRepository = productRepository;
+                this.productMapper = productMapper;
+                this.userRepository = userRepository;
+                this.companyRepository = companyRepository;
+                this.authSecurity = authSecurity;
         }
 
-        // 2. Mapeia a lista de entidades para a lista de DTOs usando o Mapper
-        return activeProducts.stream()
-                .map(productMapper::toProductCardDTO)
-                .collect(Collectors.toList());
-    }
+        // --- CADASTRO ---
 
-    /**
-     * Retorna um único produto ativo pelo ID no formato de Card.
-     * 
-     * @param id ID do produto.
-     * @return ProductCardResponseDTO
-     */
-    public ProductCardResponseDTO findProductCardById(Long id) {
-        Product product = productRepository.findById(id)
-                .filter(Product::isActive)
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado ou inativo."));
+        /**
+         * Adiciona um novo produto, vinculando-o à empresa do usuário autenticado.
+         */
+        public void addProduct(AddProductRequestDTO requestDTO, Authentication authentication)
+                        throws UsernameNotFoundException, EntityNotFoundException {
 
-        // Mapeia o produto encontrado para o DTO de Card
-        return productMapper.toProductCardDTO(product);
-    }
+                // 1. Localiza o ID do Usuário logado
+                Long userId = authSecurity.getLoggedInUserId(authentication);
 
-    // =========================================================================
-    // 🎯 NOVO MÉTODO (Lógica de Produção para o Dashboard da Empresa)
-    // =========================================================================
+                // 2. Localiza o Usuário
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new UsernameNotFoundException("Usuário logado não encontrado."));
 
-    /**
-     * Lógica de Produção: Retorna produtos da empresa autenticada.
-     * Requer que o usuário logado seja do tipo EMPRESA.
-     * * @param authentication Objeto de autenticação do Spring Security.
-     * 
-     * @return Lista de ProductDetailResponseDTO.
-     */
-    public List<ProductDetailResponseDTO> findProductsForLoggedInCompany(Authentication authentication)
-            throws AccessDeniedException {
+                // 3. Localiza a Empresa
+                Company company = companyRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "Empresa não encontrada para o usuário logado."));
 
-        // 1. Extrai o "username" (geralmente o email) do token JWT
-        String userEmail = authentication.getName();
-
-        // 2. Localiza o Usuário
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado ou inativo."));
-
-        // 3. Verifica o tipo de usuário (segurança por papel)
-        if (user.getTipoUsuario() != UserType.EMPRESA) {
-            // Lança uma exceção para ser capturada e retornar 403 (FORBIDDEN) no Controller
-            throw new AccessDeniedException("Acesso negado. Apenas empresas podem acessar o dashboard.");
+                // 4. Mapeia e salva
+                Product product = productMapper.toProductEntity(requestDTO, company);
+                productRepository.save(product);
         }
 
-        // 4. Localiza a Empresa associada a este Usuário
-        // Assume-se que CompanyRepository possui o método findByUserId
-        Company company = companyRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Empresa não encontrada para o usuário logado."));
+        // --- CONSULTA PARA CLIENTE (Card) ---
 
-        // 5. Busca os produtos usando o ID da empresa (método que você já tem no
-        // ProductRepository)
-        List<Product> companyProducts = productRepository.findByCompanyId(company.getId());
-
-        if (companyProducts.isEmpty()) {
-            return List.of();
+        public List<ProductCardResponseDTO> findAllActiveProductsCard() {
+                // Assume que productRepository.findAll() ou similar é usado aqui
+                return productRepository.findAll().stream()
+                                .map(productMapper::toProductCardDTO)
+                                .collect(Collectors.toList());
         }
 
-        // 6. Mapeia para o DTO de Detalhe
-        return companyProducts.stream()
-                .map(productMapper::toProductDetailDTO)
-                .collect(Collectors.toList());
-    }
+        public ProductCardResponseDTO findProductCardById(Long id) {
+                Product product = productRepository.findById(id)
+                                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+                return productMapper.toProductCardDTO(product);
+        }
+
+        // --- NOVO MÉTODO DE CONSULTA PARA DETALHE (Usado para o ProductDetailScreen)
+        // ---
+
+        /**
+         * Busca um único produto ativo pelo ID e retorna o DTO de Detalhe.
+         * Este é o método que o seu teste estava a tentar chamar.
+         */
+        public ProductDetailResponseDTO findProductDetailById(Long id) {
+                Product product = productRepository.findById(id)
+                                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+
+                // ⚠️ ATENÇÃO: Certifique-se que o ProductMapper tem o método
+                // 'toProductDetailDTO(Product product)'
+                return productMapper.toProductDetailDTO(product);
+        }
+
+        // --- CONSULTA PARA EMPRESA (Dashboard) ---
+
+        /**
+         * Busca os produtos da empresa autenticada.
+         */
+        @SuppressWarnings("null")
+        public List<ProductDetailResponseDTO> findProductsForLoggedInCompany(Authentication authentication)
+                        throws AccessDeniedException {
+
+                Long userId = authSecurity.getLoggedInUserId(authentication);
+
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new UsernameNotFoundException(
+                                                "Usuário logado não encontrado ou inativo."));
+
+                if (user.getTipoUsuario() != UserType.EMPRESA) {
+                        throw new AccessDeniedException("Acesso negado. Apenas empresas podem acessar o dashboard.");
+                }
+
+                Company company = companyRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new EntityNotFoundException(
+                                                "Empresa não encontrada para o usuário logado."));
+
+                List<Product> companyProducts = productRepository.findByCompanyId(company.getId());
+
+                return companyProducts.stream()
+                                .map(productMapper::toProductDetailDTO)
+                                .collect(Collectors.toList());
+        }
 }

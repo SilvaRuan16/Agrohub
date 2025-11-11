@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid, Select, MenuItem, FormControl, InputLabel, TextareaAutosize } from '@mui/material';
+import { Box, Typography, TextField, Button, Grid, Select, MenuItem, FormControl, InputLabel, TextareaAutosize, Alert } from '@mui/material';
 import styled from 'styled-components';
 import axios from 'axios';
-import CompanyHeader from './CompanyHeader'; // Importação do novo cabeçalho
+import CompanyHeader from './CompanyHeader';
 
 // --- Styled Components (Reutilizados) ---
-// Removido o Styled 'Header' simples, pois usaremos o CompanyHeader
+
 const RegisterContainer = styled(Box)`
   display: flex;
   flex-direction: column;
@@ -32,156 +32,200 @@ const Footer = styled(Box)`
   text-align: center;
 `;
 
-const API_ADD_PRODUCT_URL = 'http://localhost:8080/api/v1/product/add';
+// Rota corrigida para o padrão RESTful (POST /api/v1/products)
+const API_ADD_PRODUCT_URL = 'http://localhost:8080/api/v1/products';
 
-// --- Componente Principal ---
+const initialFormData = {
+  name: '',
+  description: '',
+  price: '',
+  stock: '',
+  productType: '',
+  additionalInfo: '',
+  link: '',
+  discount: '',
+};
 
-export default function AddProductScreen({ isEdit = false }) {
+export default function AddProductScreen() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '', internalCode: '', category: '', priceCompra: '',
-    priceVenda: '', priceMinVenda: '', maxDiscount: '', quantityEstoque: '',
-    quantityMinEstoque: '', margemLucro: '', formaPagamento: '', description: '',
-    produtor: '', municipio: '', cnpj: '', tipoProduto: '',
-    rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '',
-    telefone: '', email: '', redeSocial: '', website: '', link: ''
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleClear = () => {
+    setFormData(initialFormData);
+    setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Dados do Produto para API:', formData);
-    
+    setError('');
+    setSuccess('');
+
     try {
-        const url = isEdit ? `${API_ADD_PRODUCT_URL}/${'id_produto'}` : API_ADD_PRODUCT_URL;
-        const method = isEdit ? axios.put : axios.post;
+      // 🔑 CORREÇÃO CRÍTICA: Obtém o token JWT e o anexa ao cabeçalho Authorization
+      const token = localStorage.getItem('token');
 
-        const response = await method(url, formData);
+      if (!token) {
+        setError('Você não está logado. Por favor, faça login novamente.');
+        return;
+      }
 
-        console.log('Operação de Produto bem-sucedida:', response.data);
-        alert(isEdit ? 'Produto editado com sucesso!' : 'Produto cadastrado com sucesso!');
-        navigate('/dashboard'); 
+      const response = await axios.post(
+        API_ADD_PRODUCT_URL,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Envia o token para o backend
+            'Content-Type': 'application/json',
+          }
+        }
+      );
 
-    } catch (error) {
-        console.error('Erro na operação de produto:', error);
-        alert('Falha na operação. Verifique o console para mais detalhes.');
+      if (response.status === 201) {
+        setSuccess('Produto adicionado com sucesso!');
+        handleClear();
+        // Opcional: navegar para o dashboard após sucesso
+        setTimeout(() => navigate('/dashboard'), 2000);
+      }
+    } catch (err) {
+      console.error('Erro na operação de produto:', err);
+      // Trata erros de validação (400) ou segurança (403)
+      if (err.response && err.response.status === 403) {
+        setError('Acesso negado. Sua conta não tem permissão para adicionar produtos. (Verifique o token e a ROLE)');
+      } else if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message); // Exibe mensagem de erro do backend
+      } else {
+        setError('Falha ao adicionar produto. Verifique sua conexão ou o servidor.');
+      }
     }
-  };
-  
-  const handleClear = () => {
-    setFormData({
-        name: '', internalCode: '', category: '', priceCompra: '',
-        priceVenda: '', priceMinVenda: '', maxDiscount: '', quantityEstoque: '',
-        quantityMinEstoque: '', margemLucro: '', formaPagamento: '', description: '',
-        produtor: '', municipio: '', cnpj: '', tipoProduto: '',
-        rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '',
-        telefone: '', email: '', redeSocial: '', website: '', link: ''
-    });
   };
 
   return (
     <RegisterContainer>
-      {/* NOVO: Usando o CompanyHeader para navegação */}
-      <CompanyHeader /> 
-
+      <CompanyHeader />
       <FormContainer component="form" onSubmit={handleSubmit}>
-        <Typography variant="h5" gutterBottom style={{ color: '#1a4314', marginBottom: '20px' }}>
-          Informações sobre o produto
+        <Typography variant="h4" gutterBottom style={{ color: '#1a4314', marginTop: '10px' }}>
+          Cadastro de Novo Produto
+        </Typography>
+        <Typography variant="subtitle1" gutterBottom style={{ color: '#555' }}>
+          Preencha os campos abaixo para listar seu produto no catálogo.
         </Typography>
 
-        <Grid container spacing={3}>
-          {/* BLOCO 1: Informações Básicas e Preços */}
-          <Grid item xs={12} sm={6}>
-            <TextField label="Nome do produto" name="name" value={formData.name} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Preço de compra" name="priceCompra" value={formData.priceCompra} onChange={handleChange} fullWidth margin="normal" />
-            <TextField label="Preço mín de venda" name="priceMinVenda" value={formData.priceMinVenda} onChange={handleChange} fullWidth margin="normal" />
-            <TextField label="Quantidade estoque" name="quantityEstoque" value={formData.quantityEstoque} onChange={handleChange} fullWidth margin="normal" />
-            
-            <Box display="flex" alignItems="center" my={2} gap={1}>
-                <Button variant="outlined" component="label">
-                    Escolher Arquivo (Imagem)
-                    <input type="file" hidden onChange={handleChange} name="imagem" />
-                </Button>
-                <Button variant="outlined" style={{ flexGrow: 1 }}>Visualizar imagem</Button>
-            </Box>
-          </Grid>
+        {/* Alerts de Erro/Sucesso */}
+        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
 
-          {/* BLOCO 2: Códigos, Margem e Desconto */}
+        <Grid container spacing={3} mt={2}>
+          {/* Nome do Produto */}
           <Grid item xs={12} sm={6}>
-            <TextField label="Código interno" name="internalCode" value={formData.internalCode} onChange={handleChange} fullWidth margin="normal" />
-            <FormControl fullWidth margin="normal">
-                <InputLabel>Categoria</InputLabel>
-                <Select label="Categoria" name="category" value={formData.category} onChange={handleChange}>
-                    <MenuItem value="">Selecione</MenuItem>
-                    <MenuItem value="raiz">Raízes</MenuItem>
-                    <MenuItem value="graos">Grãos</MenuItem>
-                </Select>
-            </FormControl>
-            <TextField label="Preço de venda" name="priceVenda" value={formData.priceVenda} onChange={handleChange} fullWidth margin="normal" required />
-            <TextField label="Margem lucro (%)" name="margemLucro" value={formData.margemLucro} onChange={handleChange} fullWidth margin="normal" />
-            <TextField label="Quantidade mín em estoque" name="quantityMinEstoque" value={formData.quantityMinEstoque} onChange={handleChange} fullWidth margin="normal" />
-            
-            <TextField label="Valor máx desconto (%)" name="maxDiscount" value={formData.maxDiscount} onChange={handleChange} fullWidth margin="normal" />
-            <Button variant="contained" fullWidth style={{ backgroundColor: '#ffb74d', marginTop: '10px' }}>Aplicar desconto dinâmico</Button>
-          </Grid>
-        </Grid>
-
-        {/* BLOCO 3: Descrição e Forma de Pagamento */}
-        <Box my={3}>
-            <FormControl fullWidth margin="normal">
-                <InputLabel>Forma de pagamento</InputLabel>
-                <Select label="Forma de pagamento" name="formaPagamento" value={formData.formaPagamento} onChange={handleChange}>
-                    <MenuItem value="">Selecione Forma de pagamento</MenuItem>
-                    <MenuItem value="pix">Pix</MenuItem>
-                    <MenuItem value="boleto">Boleto</MenuItem>
-                </Select>
-            </FormControl>
-            <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>Descrição</Typography>
-            <TextareaAutosize
-                minRows={5}
-                placeholder="Descrição geral do produto"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
+            <TextField
+              fullWidth
+              label="Nome do Produto"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
             />
-        </Box>
-        
-        {/* BLOCO 4: Informações Adicionais (Opcional) */}
-        <Typography variant="h6" gutterBottom style={{ color: '#1a4314', borderBottom: '1px solid #ddd', paddingBottom: '5px', marginTop: '20px', marginBottom: '15px' }}>
-          Informações Adicionais (Opcional)
-        </Typography>
-        <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-                <TextField label="Produtor" name="produtor" value={formData.produtor} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Cnpj" name="cnpj" value={formData.cnpj} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Rua" name="rua" value={formData.rua} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Bairro" name="bairro" value={formData.bairro} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Estado" name="estado" value={formData.estado} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Telefone" name="telefone" value={formData.telefone} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Rede Social" name="redeSocial" value={formData.redeSocial} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Preço de compra" name="priceCompra" value={formData.priceCompra} onChange={handleChange} fullWidth margin="normal" />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-                <TextField label="Município" name="municipio" value={formData.municipio} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Tipo do produto" name="tipoProduto" value={formData.tipoProduto} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Número" name="numero" value={formData.numero} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Cep" name="cep" value={formData.cep} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Email" name="email" value={formData.email} onChange={handleChange} fullWidth margin="normal" />
-                <TextField label="Código interno" name="internalCode" value={formData.internalCode} onChange={handleChange} fullWidth margin="normal" />
-                <FormControl fullWidth margin="normal">
-                    <InputLabel>Selecionar</InputLabel>
-                    <Select label="Selecionar" name="link" value={formData.link} onChange={handleChange}>
-                        <MenuItem value="">Link</MenuItem>
-                        <MenuItem value="1">Link 1</MenuItem>
-                    </Select>
-                </FormControl>
-            </Grid>
+          </Grid>
+
+          {/* Tipo do Produto */}
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth required variant="outlined" margin="normal">
+              <InputLabel>Tipo do Produto</InputLabel>
+              <Select label="Tipo do Produto" name="productType" value={formData.productType} onChange={handleChange}>
+                <MenuItem value="">Selecione o Tipo</MenuItem>
+                <MenuItem value="GRAOS">Grãos</MenuItem>
+                <MenuItem value="FRUTAS">Frutas</MenuItem>
+                <MenuItem value="VERDURAS">Verduras</MenuItem>
+                <MenuItem value="ANIMAIS">Animais</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Preço */}
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              label="Preço (R$)"
+              name="price"
+              type="number"
+              value={formData.price}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          {/* Estoque */}
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              label="Estoque (Unidades)"
+              name="stock"
+              type="number"
+              value={formData.stock}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          {/* Desconto (Opcional) */}
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              label="Desconto (%)"
+              name="discount"
+              type="number"
+              value={formData.discount}
+              onChange={handleChange}
+            />
+          </Grid>
+
+          {/* Descrição */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" gutterBottom mt={1}>Descrição Detalhada</Typography>
+            <TextareaAutosize
+              minRows={5}
+              placeholder="Descreva seu produto, benefícios e especificações..."
+              style={{ width: '100%', padding: '10px', borderColor: '#ccc', borderRadius: '4px' }}
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          {/* Informação Adicional (Opcional) */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Informação Adicional (Ex: Certificação)"
+              name="additionalInfo"
+              value={formData.additionalInfo}
+              onChange={handleChange}
+            />
+          </Grid>
+
+          {/* Link (Opcional) */}
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth variant="outlined" margin="normal">
+              <InputLabel>Link de Vídeo/Documentação (Opcional)</InputLabel>
+              <Select label="Link de Vídeo/Documentação (Opcional)" name="link" value={formData.link} onChange={handleChange}>
+                <MenuItem value="">Nenhum Link</MenuItem>
+                <MenuItem value="1">Link de Exemplo 1</MenuItem>
+                <MenuItem value="2">Link de Exemplo 2</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
 
         {/* Botões de Ação */}
@@ -196,12 +240,12 @@ export default function AddProductScreen({ isEdit = false }) {
             Salvar
           </Button>
         </Box>
-        
+
         {/* Rodapé interno com texto do projeto */}
         <Box mt={4} py={3} sx={{ fontSize: '0.75rem', color: '#555', borderTop: '1px solid #eee' }}>
-            <Typography variant="caption" display="block">
-                &copy; AgroHub - Projeto Acadêmico
-            </Typography>
+          <Typography variant="caption" display="block">
+            &copy; AgroHub - Projeto Acadêmico
+          </Typography>
         </Box>
       </FormContainer>
 
