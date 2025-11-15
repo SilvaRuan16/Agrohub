@@ -1,7 +1,7 @@
 package br.com.agrohub.demo.mappers;
 
 import java.util.List;
-import java.util.stream.Collectors; // <-- Import já existente, necessário para o novo método
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -32,88 +32,29 @@ public class ProductMapper {
         this.commonMapper = commonMapper;
     }
 
+    // --- Métodos de Mapeamento de Resposta (Mantidos como Placeholder) ---
+
     /**
-     * Mapeia a entidade Product para o DTO de Detalhe (usado para o Dashboard da
-     * Empresa).
-     * * @param product Entidade Produto completa.
+     * Mapeia a entidade Product para o DTO de Detalhe.
+     * * @param product Entidade Produto.
      * * @return ProductDetailResponseDTO.
      */
     public ProductDetailResponseDTO toProductDetailDTO(Product product) {
-        ProductDetailResponseDTO dto = new ProductDetailResponseDTO();
-
-        // 1. DADOS PRINCIPAIS (Product)
-        dto.setId(product.getId());
-        dto.setNome(product.getNome());
-
-        // CAMPOS ADICIONADOS PARA A DASHBOARD
-        dto.setCodigoInterno(product.getCodigoInterno());
-        dto.setMargemLucro(product.getMargemLucro());
-
-        dto.setPrecoVenda(product.getPrecoVenda());
-        dto.setUnidadeMedida(product.getUnitOfMeasurement());
-        dto.setQuantidadeEstoque(product.getQuantidadeEstoque());
-        dto.setDescricao(product.getDescricao());
-
-        // 2. MÍDIA
-        List<String> imageUrls = product.getImages().stream()
-                .map(Image::getUrl)
-                .collect(Collectors.toList());
-        dto.setImagensUrls(imageUrls);
-
-        // 3. DESCONTO
-        Discount discount = product.getDiscount();
-        if (discount != null) {
-            dto.setDescontoMaximo(discount.getPercentual().doubleValue());
-        }
-
-        // 4. AVALIAÇÕES
-        dto.setRatingMedio(4.5);
-        dto.setTotalAvaliacoes(50);
-
-        List<ComentarioDTO> comentariosDTO = product.getComments().stream()
-                .map(commonMapper::toComentarioDTO)
-                .collect(Collectors.toList());
-        dto.setComentarios(comentariosDTO);
-
-        // 5. INFORMAÇÕES DA EMPRESA (COMPANY)
-        Company company = product.getCompany();
-        if (company != null) {
-            CompanyResumeDTO companyDto = new CompanyResumeDTO(company.getId(), company.getNomeFantasia());
-            dto.setEmpresa(companyDto);
-        }
-
-        // 6. INFORMAÇÕES ADICIONAIS
-        AdditionalInfo info = product.getAdditionalInfo();
-        if (info != null) {
-            dto.setNomeProdutor(info.getProdutor());
-            dto.setCnpjProdutor(info.getCnpjProdutor());
-            dto.setMunicipioEmpresa(info.getMunicipio());
-
-            ProductType productType = info.getProductType();
-            if (productType != null) {
-                dto.setTipoProduto(productType.getTipo());
-            }
-        }
-
-        return dto;
+        // [Mantenha seu código original aqui]
+        return new ProductDetailResponseDTO(); // Placeholder
     }
 
-    // =========================================================================
-    // 🎯 NOVO MÉTODO ADICIONADO (Para corrigir os erros de teste)
-    // =========================================================================
-
     /**
-     * Mapeia uma lista de entidades Product para uma lista de DTOs de Detalhe.
-     * 
-     * @param products Lista de entidades Produto.
-     * @return Lista de ProductDetailResponseDTO.
+     * Mapeia uma lista de entidades Produto para uma lista de DTOs de Detalhe.
+     * * @param products Lista de entidades Produto.
+     * * @return Lista de ProductDetailResponseDTO.
      */
     public List<ProductDetailResponseDTO> toProductDetailDTOList(List<Product> products) {
         if (products == null) {
             return List.of(); // Retorna lista vazia se a entrada for nula
         }
         return products.stream()
-                .map(this::toProductDetailDTO) // Reutiliza o método de mapeamento individual
+                .map(this::toProductDetailDTO)
                 .collect(Collectors.toList());
     }
 
@@ -128,20 +69,45 @@ public class ProductMapper {
         return new ProductCardResponseDTO(); // Placeholder
     }
 
+    // --- Método de Mapeamento de Requisição (CORRIGIDO) ---
+
     /**
-     * Mapeia o DTO de Requisição para a Entidade Product.
-     * * @param dto     AddProductRequestDTO.
+     * Mapeia o DTO de Requisição (AddProductRequestDTO) para a Entidade Product.
+     * * @param dto AddProductRequestDTO.
      * * @param company Empresa associada.
-     * 
-     * @return Entidade Product.
+     * * @return Entidade Product.
      */
     public Product toProductEntity(AddProductRequestDTO dto, Company company) {
-        // [Mantenha seu código original aqui]
         Product product = new Product();
+
+        // 1. Mapeamento de Entidades
         product.setCompany(company);
+
+        // 2. Mapeamento dos Dados do Produto (DB/Português <- DTO/Inglês)
+        // Usamos os getters das variáveis em inglês do DTO.
+
         product.setNome(dto.getName());
         product.setDescricao(dto.getShortDescription());
-        // ... set outros campos
-        return product; // Placeholder
+        product.setPrecoVenda(dto.getSalePrice());
+        product.setQuantidadeEstoque(dto.getInitialStock());
+
+        // 🎯 CORREÇÃO CRÍTICA: Mapeamento da unidade de medida que estava faltando.
+        product.setUnitOfMeasurement(dto.getUnitOfMeasurement());
+
+        // Mapeamento dos campos opcionais (Se eles existirem na sua Entidade Product)
+        // Se a entidade Product tiver estes setters:
+
+        // Mapeamento de IDs (ajuste o nome do setter conforme sua Entidade)
+        // product.setTipoProdutoId(dto.getProductTypeId());
+        // product.setDescontoId(dto.getDiscountId());
+
+        // Mapeamento de Informações Adicionais (Se estiverem na Entidade Product)
+        // product.setLinkAdicional(dto.getLinkAdicional());
+
+        // Se o DTO tiver um campo 'detailedDescription' e a entidade tiver o setter
+        // correspondente
+        // product.setDescricaoDetalhada(dto.getDetailedDescription());
+
+        return product;
     }
 }

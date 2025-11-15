@@ -1,5 +1,6 @@
 package br.com.agrohub.demo.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty; // Importe esta classe
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -7,51 +8,56 @@ import java.util.List;
 public class ProductCreateRequestDTO implements Serializable {
 
     // 1. DADOS BÁSICOS DO PRODUTO (Tabela: PRODUTOS)
+    @JsonProperty("nome") // Força o mapeamento do campo "nome" do JSON
     private String nome;
+
+    @JsonProperty("descricao")
     private String descricao;
-    private Long categoriaId; // FK para tabela categorias
-    private Long tipoProdutoId; // FK para tabela tipos_produtos
+
+    @JsonProperty("categoriaId")
+    private Long categoriaId;
+
+    @JsonProperty("tipoProdutoId")
+    private Long tipoProdutoId;
 
     // 2. DADOS DE PREÇO E ESTOQUE
+    @JsonProperty("precoVenda")
     private BigDecimal precoVenda;
-    private Integer quantidadeEstoque;
-    private String unidadeMedida; // Ex: "KG", "UN", "CAIXA"
-    private Integer quantidadeMinEstoque; // Para alerta na dashboard da empresa
-    
-    // 3. IMAGENS (Tabela: IMAGENS)
-    private List<String> imagensUrls; 
-    
-    // 4. INFORMAÇÕES ADICIONAIS/LOGÍSTICAS (Tabela: INFORMACOES_ADICIONAIS/LOGISTICAS)
-    // Campos vistos na tela AddProductScreen.jsx:
-    private String produtor;
-    private String municipio;
-    private Long logisticaId; // FK para Logistica
-    private Long descontoId; // FK para Desconto (se houver desconto padrão)
-    private String linkAdicional; // O campo 'link' na sua tela
 
-    // Construtor padrão
+    @JsonProperty("quantidadeEstoque")
+    private Integer quantidadeEstoque;
+
+    @JsonProperty("unidadeMedida")
+    private String unidadeMedida;
+
+    @JsonProperty("quantidadeMinEstoque")
+    private Integer quantidadeMinEstoque;
+
+    // 3. IMAGENS (Tabela: IMAGENS)
+    @JsonProperty("imagensUrls")
+    private List<String> imagensUrls;
+
+    // 4. INFORMAÇÕES ADICIONAIS/LOGÍSTICAS
+    @JsonProperty("produtor")
+    private String produtor;
+
+    @JsonProperty("municipio")
+    private String municipio;
+
+    @JsonProperty("logisticaId")
+    private Long logisticaId;
+
+    @JsonProperty("descontoId")
+    private Long descontoId;
+
+    @JsonProperty("linkAdicional")
+    private String linkAdicional;
+
+    // Construtor padrão (CRÍTICO para desserialização)
     public ProductCreateRequestDTO() {
     }
 
-    // Construtor com todos os campos (útil para testes e services)
-    public ProductCreateRequestDTO(String nome, String descricao, Long categoriaId, Long tipoProdutoId, BigDecimal precoVenda, Integer quantidadeEstoque, String unidadeMedida, Integer quantidadeMinEstoque, List<String> imagensUrls, String produtor, String municipio, Long logisticaId, Long descontoId, String linkAdicional) {
-        this.nome = nome;
-        this.descricao = descricao;
-        this.categoriaId = categoriaId;
-        this.tipoProdutoId = tipoProdutoId;
-        this.precoVenda = precoVenda;
-        this.quantidadeEstoque = quantidadeEstoque;
-        this.unidadeMedida = unidadeMedida;
-        this.quantidadeMinEstoque = quantidadeMinEstoque;
-        this.imagensUrls = imagensUrls;
-        this.produtor = produtor;
-        this.municipio = municipio;
-        this.logisticaId = logisticaId;
-        this.descontoId = descontoId;
-        this.linkAdicional = linkAdicional;
-    }
-
-    // Getters e Setters
+    // --- GETTERS E SETTERS ---
     public String getNome() {
         return nome;
     }

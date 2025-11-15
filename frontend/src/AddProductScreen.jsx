@@ -6,7 +6,6 @@ import axios from 'axios';
 import CompanyHeader from './CompanyHeader';
 
 // --- Styled Components (Reutilizados) ---
-
 const RegisterContainer = styled(Box)`
   display: flex;
   flex-direction: column;
@@ -35,15 +34,17 @@ const Footer = styled(Box)`
 // Rota corrigida para o padrão RESTful (POST /api/v1/products)
 const API_ADD_PRODUCT_URL = 'http://localhost:8080/api/v1/products';
 
+// 🔑 CHAVES DO JSON EM PORTUGUÊS para alinhar com o @JsonProperty do DTO
 const initialFormData = {
-  name: '',
-  description: '',
-  price: '',
-  stock: '',
-  productType: '',
-  additionalInfo: '',
-  link: '',
-  discount: '',
+  nome: '', // Corresponde a name no DTO
+  descricao: '', // Corresponde a shortDescription no DTO
+  precoVenda: '', // Corresponde a salePrice no DTO
+  quantidadeEstoque: '', // Corresponde a initialStock no DTO
+  unidadeMedida: '', // CRÍTICO: Corresponde a unitOfMeasurement no DTO
+  tipoProdutoId: '', // Corresponde a productTypeId no DTO
+  produtor: '', // Corresponde a produtorName no DTO
+  linkAdicional: '', // Corresponde a linkAdicional no DTO
+  descontoId: '', // Corresponde a discountId no DTO
 };
 
 export default function AddProductScreen() {
@@ -72,17 +73,26 @@ export default function AddProductScreen() {
     setSuccess('');
 
     try {
-      // 🔑 CORREÇÃO CRÍTICA: Obtém o token JWT e o anexa ao cabeçalho Authorization
-      const token = localStorage.getItem('token');
+      // 🔑 CORREÇÃO CRÍTICA DO TOKEN: Usa 'authToken' ou 'token' como fallback
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
 
       if (!token) {
         setError('Você não está logado. Por favor, faça login novamente.');
         return;
       }
 
+      // 🔑 CORREÇÃO DE TIPOS: Converte strings para números
+      const dataToSend = {
+        ...formData,
+        precoVenda: formData.precoVenda ? parseFloat(formData.precoVenda) : null,
+        quantidadeEstoque: formData.quantidadeEstoque ? parseInt(formData.quantidadeEstoque, 10) : null,
+        tipoProdutoId: formData.tipoProdutoId ? parseInt(formData.tipoProdutoId, 10) : null,
+        descontoId: formData.descontoId ? parseInt(formData.descontoId, 10) : null,
+      };
+
       const response = await axios.post(
         API_ADD_PRODUCT_URL,
-        formData,
+        dataToSend, // Envia o objeto corrigido com nomes e tipos certos
         {
           headers: {
             Authorization: `Bearer ${token}`, // Envia o token para o backend
@@ -93,20 +103,25 @@ export default function AddProductScreen() {
 
       if (response.status === 201) {
         setSuccess('Produto adicionado com sucesso!');
-        handleClear();
-        // Opcional: navegar para o dashboard após sucesso
-        setTimeout(() => navigate('/dashboard'), 2000);
+        handleClear(); // Limpa o formulário
+
+        // 🎯 AQUI É O PONTO CRÍTICO: Redirecionamento após 2 segundos
+        setTimeout(() => navigate('/company/dashboard'), 2000);
       }
     } catch (err) {
       console.error('Erro na operação de produto:', err);
-      // Trata erros de validação (400) ou segurança (403)
-      if (err.response && err.response.status === 403) {
-        setError('Acesso negado. Sua conta não tem permissão para adicionar produtos. (Verifique o token e a ROLE)');
-      } else if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message); // Exibe mensagem de erro do backend
-      } else {
-        setError('Falha ao adicionar produto. Verifique sua conexão ou o servidor.');
+
+      let errorMessage = 'Falha ao adicionar produto. Verifique sua conexão ou o servidor.';
+      if (err.response) {
+        if (err.response.status === 403) {
+          errorMessage = 'Acesso negado. Sua conta não tem permissão para adicionar produtos. (Verifique o token e a ROLE)';
+        } else if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.status === 400) {
+          errorMessage = 'Dados inválidos. Por favor, verifique se todos os campos estão preenchidos corretamente.';
+        }
       }
+      setError(errorMessage);
     }
   };
 
@@ -131,8 +146,8 @@ export default function AddProductScreen() {
             <TextField
               fullWidth
               label="Nome do Produto"
-              name="name"
-              value={formData.name}
+              name="nome" // Chave em português
+              value={formData.nome}
               onChange={handleChange}
               required
             />
@@ -142,12 +157,12 @@ export default function AddProductScreen() {
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth required variant="outlined" margin="normal">
               <InputLabel>Tipo do Produto</InputLabel>
-              <Select label="Tipo do Produto" name="productType" value={formData.productType} onChange={handleChange}>
+              <Select label="Tipo do Produto" name="tipoProdutoId" value={formData.tipoProdutoId} onChange={handleChange}>
                 <MenuItem value="">Selecione o Tipo</MenuItem>
-                <MenuItem value="GRAOS">Grãos</MenuItem>
-                <MenuItem value="FRUTAS">Frutas</MenuItem>
-                <MenuItem value="VERDURAS">Verduras</MenuItem>
-                <MenuItem value="ANIMAIS">Animais</MenuItem>
+                <MenuItem value="1">Grãos</MenuItem>
+                <MenuItem value="2">Frutas</MenuItem>
+                <MenuItem value="3">Verduras</MenuItem>
+                <MenuItem value="4">Animais</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -157,9 +172,9 @@ export default function AddProductScreen() {
             <TextField
               fullWidth
               label="Preço (R$)"
-              name="price"
+              name="precoVenda" // Chave em português
               type="number"
-              value={formData.price}
+              value={formData.precoVenda}
               onChange={handleChange}
               required
             />
@@ -170,12 +185,31 @@ export default function AddProductScreen() {
             <TextField
               fullWidth
               label="Estoque (Unidades)"
-              name="stock"
+              name="quantidadeEstoque" // Chave em português
               type="number"
-              value={formData.stock}
+              value={formData.quantidadeEstoque}
               onChange={handleChange}
               required
             />
+          </Grid>
+
+          {/* Unidade de Medida (CRÍTICO) */}
+          <Grid item xs={12} sm={4}>
+            <FormControl fullWidth required variant="outlined">
+              <InputLabel>Unidade de Medida</InputLabel>
+              <Select
+                label="Unidade de Medida"
+                name="unidadeMedida" // Chave em português
+                value={formData.unidadeMedida}
+                onChange={handleChange}
+              >
+                <MenuItem value="">Selecione</MenuItem>
+                <MenuItem value="KG">Quilograma (KG)</MenuItem>
+                <MenuItem value="UN">Unidade (UN)</MenuItem>
+                <MenuItem value="LT">Litro (LT)</MenuItem>
+                <MenuItem value="SC">Saca</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
 
           {/* Desconto (Opcional) */}
@@ -183,9 +217,9 @@ export default function AddProductScreen() {
             <TextField
               fullWidth
               label="Desconto (%)"
-              name="discount"
+              name="descontoId" // Chave em português
               type="number"
-              value={formData.discount}
+              value={formData.descontoId}
               onChange={handleChange}
             />
           </Grid>
@@ -197,20 +231,20 @@ export default function AddProductScreen() {
               minRows={5}
               placeholder="Descreva seu produto, benefícios e especificações..."
               style={{ width: '100%', padding: '10px', borderColor: '#ccc', borderRadius: '4px' }}
-              name="description"
-              value={formData.description}
+              name="descricao" // Chave em português
+              value={formData.descricao}
               onChange={handleChange}
               required
             />
           </Grid>
 
-          {/* Informação Adicional (Opcional) */}
+          {/* Informação Adicional (Produtor) */}
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Informação Adicional (Ex: Certificação)"
-              name="additionalInfo"
-              value={formData.additionalInfo}
+              label="Produtor / Informação Adicional (Ex: Certificação)"
+              name="produtor" // Chave em português
+              value={formData.produtor}
               onChange={handleChange}
             />
           </Grid>
@@ -219,7 +253,7 @@ export default function AddProductScreen() {
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth variant="outlined" margin="normal">
               <InputLabel>Link de Vídeo/Documentação (Opcional)</InputLabel>
-              <Select label="Link de Vídeo/Documentação (Opcional)" name="link" value={formData.link} onChange={handleChange}>
+              <Select label="Link de Vídeo/Documentação (Opcional)" name="linkAdicional" value={formData.linkAdicional} onChange={handleChange}>
                 <MenuItem value="">Nenhum Link</MenuItem>
                 <MenuItem value="1">Link de Exemplo 1</MenuItem>
                 <MenuItem value="2">Link de Exemplo 2</MenuItem>

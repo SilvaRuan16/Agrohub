@@ -2,7 +2,7 @@ package br.com.agrohub.demo.dto;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-
+import com.fasterxml.jackson.annotation.JsonProperty; // NOVO: ESSENCIAL PARA O MAPEAMENTO
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,37 +10,52 @@ import lombok.NoArgsConstructor;
 
 /**
  * DTO de requisição para o cadastro de um novo produto.
- * Contém dados do produto e informações adicionais.
- * * Este DTO resolve a ausência da classe no ProductMapper.
+ * Mapeia JSON em português para variáveis DTO em inglês usando @JsonProperty.
  */
-@Data // Gera Getters, Setters, toString, equals e hashCode
-@Builder // Útil para a criação de objetos
-@NoArgsConstructor // Construtor sem argumentos
-@AllArgsConstructor // Construtor com todos os argumentos
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AddProductRequestDTO implements Serializable {
 
     // ===================================
-    // DADOS DO PRODUTO (Mapeados para Product.java)
+    // MAPEAMENTO: JSON (Português) -> Variável (Inglês)
     // ===================================
-    private String name;                // Mapeia para product.nome
-    private String shortDescription;    // Mapeia para product.descricaoCurta
-    private String detailedDescription; // Mapeia para product.descricaoDetalhada
-    private BigDecimal salePrice;       // Mapeia para product.precoVenda
-    private BigDecimal costPrice;       // Mapeia para product.precoCusto
-    private Integer minStock;           // Mapeia para product.estoqueMinimo
-    private Integer initialStock;       // Mapeia para product.estoqueAtual
-    private String unitOfMeasurement;   // Mapeia para product.unidadeMedida
+    @JsonProperty("nome")
+    private String name; // Mapeia o campo "nome" do JSON para a variável 'name'.
+
+    @JsonProperty("descricao")
+    private String shortDescription; // Mapeia o campo "descricao" do JSON.
+
+    @JsonProperty("precoVenda")
+    private BigDecimal salePrice; // Mapeia o campo "precoVenda" do JSON.
+
+    @JsonProperty("quantidadeEstoque")
+    private Integer initialStock; // Mapeia o campo "quantidadeEstoque" do JSON.
+
+    @JsonProperty("unidadeMedida")
+    private String unitOfMeasurement; // Campo obrigatório no FE/DB.
+
+    @JsonProperty("tipoProdutoId")
+    private Long productTypeId; // Mapeia o campo "tipoProdutoId" do JSON.
+
+    @JsonProperty("descontoId")
+    private Long discountId; // Mapeia o campo "descontoId" do JSON.
 
     // ===================================
-    // DADOS DE INFORMAÇÕES ADICIONAIS (Mapeados para AdditionalInfo.java)
+    // Campos adicionais do FE (também em português no @JsonProperty)
     // ===================================
-    private String produtorName;        // Mapeia para info.produtor
-    private String municipality;        // Mapeia para info.municipio
-    private String producerCnpj;        // Mapeia para info.cnpjProdutor
-    
-    // ID para buscar o ProductType (tipo_produto_id)
-    private Long productTypeId; 
-    
-    // DTO de endereço para mapear a localização do produtor/produto
-    private EnderecoDTO producerAddress; 
+    @JsonProperty("produtor")
+    private String produtorName; // Mapeia "Informação Adicional" do FE para 'produtor'.
+
+    @JsonProperty("linkAdicional")
+    private String link; // Mapeia o campo "linkAdicional" (link) do JSON.
+
+    // Campos que o FE não envia (deixados para compatibilidade, podem ser nulos)
+    private String detailedDescription;
+    private BigDecimal costPrice;
+    private Integer minStock;
+    private String municipality;
+    private String producerCnpj;
+    private EnderecoDTO producerAddress;
 }
